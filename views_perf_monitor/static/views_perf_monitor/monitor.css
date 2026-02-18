@@ -1,0 +1,171 @@
+/* ── Perf monitor tables ──────────────────────────────────── */
+
+.perf-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.perf-table th,
+.perf-table td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color, #e8e8e8);
+}
+
+.perf-table th {
+    background: var(--darkened-bg, #f8f8f8);
+    font-weight: 600;
+}
+
+.perf-table th a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.perf-table th a:hover {
+    text-decoration: underline;
+}
+
+.perf-table .sort-active {
+    text-decoration: underline;
+}
+
+.perf-table tr:hover td {
+    background: var(--selected-row, #f0f7ff);
+}
+
+/* ── Charts ───────────────────────────────────────────────── */
+
+.perf-charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 900px) {
+    .perf-charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.perf-chart-module {
+    padding: 1rem 1.5rem 1.5rem;
+}
+
+.perf-chart-module h2 {
+    margin-bottom: 0.75rem;
+}
+
+.perf-chart-wrap {
+    position: relative;
+    height: 280px;
+}
+
+/* ── Route filter form ────────────────────────────────────── */
+
+.perf-filter-form {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 0 0.75rem;
+}
+
+.perf-filter-input {
+    flex: 1;
+    max-width: 360px;
+    padding: 6px 10px;
+    border: 1px solid var(--border-color, #ccc);
+    border-radius: 4px;
+    background: var(--body-bg, #fff);
+    color: var(--body-fg, #333);
+    font-size: 13px;
+}
+
+.perf-filter-input:focus {
+    outline: none;
+    border-color: var(--primary, #447e9b);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary, #447e9b) 25%, transparent);
+}
+
+.perf-filter-btn {
+    padding: 6px 14px;
+    background: var(--primary, #447e9b);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.perf-filter-btn:hover {
+    opacity: 0.88;
+}
+
+.perf-date-label {
+    font-size: 13px;
+    color: var(--body-fg, #333);
+    white-space: nowrap;
+}
+
+.perf-filter-clear {
+    font-size: 13px;
+    color: var(--secondary, #999);
+    text-decoration: none;
+}
+
+.perf-filter-clear:hover {
+    text-decoration: underline;
+}
+
+/* ── Accordion ────────────────────────────────────────────── */
+
+.perf-accordion {
+    padding: 0;
+}
+
+.perf-accordion>summary {
+    display: block;
+    list-style: none;
+    padding: 0;
+    cursor: pointer;
+    user-select: none;
+}
+
+.perf-accordion>summary::-webkit-details-marker {
+    display: none;
+}
+
+.perf-accordion-summary {
+    display: block;
+    margin: 0;
+}
+
+.perf-accordion-summary::before {
+    content: "→ ";
+    transition: content 0.1s;
+}
+
+details[open] .perf-accordion-summary::before {
+    content: "↓ ";
+}
+
+.perf-chart-wrap--tall {
+    height: 400px;
+}
+
+/* ── Empty state ──────────────────────────────────────────── */
+
+.perf-empty-state {
+    padding: 2rem;
+    text-align: center;
+    color: var(--secondary, #999);
+}
+
+/* ── Back link ────────────────────────────────────────────── */
+
+.back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+}

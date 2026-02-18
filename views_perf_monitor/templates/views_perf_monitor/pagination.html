@@ -1,0 +1,25 @@
+{% if page_obj.paginator.num_pages > 1 %}
+<p class="paginator">
+  {% if page_obj.has_previous %}
+  <a href="?{{ pagination_params }}&page={{ page_obj.previous_page_number }}">&lsaquo; previous</a>
+  {% else %}
+  <span class="this-page">&lsaquo; previous</span>
+  {% endif %}
+
+  {% for i in page_range %}
+  {% if i == ellipsis %}
+  <span class="this-page">&hellip;</span>
+  {% elif page_obj.number == i %}
+  <span class="this-page">{{ i }}</span>
+  {% else %}
+  <a href="?{{ pagination_params }}&page={{ i }}">{{ i }}</a>
+  {% endif %}
+  {% endfor %}
+
+  {% if page_obj.has_next %}
+  <a href="?{{ pagination_params }}&page={{ page_obj.next_page_number }}">next &rsaquo;</a>
+  {% else %}
+  <span class="this-page">next &rsaquo;</span>
+  {% endif %}
+</p>
+{% endif %}

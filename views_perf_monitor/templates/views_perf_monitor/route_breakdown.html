@@ -1,0 +1,84 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extrastyle %}
+<link rel="stylesheet" href="{% static 'views_perf_monitor/monitor.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<a class="back-link" href="{% url 'admin:views_perf_monitor_dashboard' %}">&larr; Back to dashboard</a>
+
+<div class="module">
+  <h2>Requests for route <code>{{ route }}</code></h2>
+  <form class="perf-filter-form" method="get" action="">
+    <input type="hidden" name="route" value="{{ route }}">
+    <input type="hidden" name="sort" value="{{ sort }}">
+    <select class="perf-filter-input" name="tag">
+      <option value="">All tags</option>
+      {% for t in available_tags %}
+      <option value="{{ t }}" {% if t == tag_filter %}selected{% endif %}>{{ t }}</option>
+      {% endfor %}
+    </select>
+    <label class="perf-date-label">From</label>
+    <input class="perf-filter-input" type="datetime-local" name="since" value="{{ since }}">
+    <label class="perf-date-label">To</label>
+    <input class="perf-filter-input" type="datetime-local" name="until" value="{{ until }}">
+    <button class="perf-filter-btn" type="submit">Filter</button>
+    {% if tag_filter or since or until %}
+    <a class="perf-filter-clear" href="?route={{ route|urlencode }}&sort={{ sort }}">Clear</a>
+    {% endif %}
+  </form>
+  {% if page_obj %}
+  <table class="perf-table">
+    <thead>
+      <tr>
+        <th>
+          <a href="?route={{ route|urlencode }}&sort=timestamp" {% if sort == "timestamp" %}class="sort-active"{% endif %}>
+            Timestamp {% if sort == "timestamp" %}&darr;{% endif %}
+          </a>
+        </th>
+        <th>
+          <a href="?route={{ route|urlencode }}&sort=method" {% if sort == "method" %}class="sort-active"{% endif %}>
+            Method {% if sort == "method" %}&darr;{% endif %}
+          </a>
+        </th>
+        <th>
+          <a href="?route={{ route|urlencode }}&sort=status_code" {% if sort == "status_code" %}class="sort-active"{% endif %}>
+            Status {% if sort == "status_code" %}&darr;{% endif %}
+          </a>
+        </th>
+        <th>
+          <a href="?route={{ route|urlencode }}&sort=duration" {% if sort == "duration" %}class="sort-active"{% endif %}>
+            Duration (ms) {% if sort == "duration" %}&darr;{% endif %}
+          </a>
+        </th>
+        <th>Tags</th>
+        <th>Request ID</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for record in page_obj %}
+      <tr>
+        <td>{{ record.timestamp|date:"Y-m-d H:i:s" }}</td>
+        <td>{{ record.method }}</td>
+        <td>{{ record.status_code }}</td>
+        <td>{{ record.duration|floatformat:2 }}</td>
+        <td>
+          {% for tag in record.tags %}
+          <a href="{% url 'admin:views_perf_monitor_tag' %}?tag={{ tag|urlencode }}"><code>{{ tag }}</code></a>{% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        </td>
+        <td><code>{{ record.request_id }}</code></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% include "views_perf_monitor/pagination.html" %}
+  {% else %}
+  <p class="perf-empty-state">No requests recorded for this route yet.</p>
+  {% endif %}
+</div>
+{% endblock %}
