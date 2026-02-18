@@ -2,8 +2,6 @@
 
 A Django middleware that tracks HTTP request performance and surfaces it as a dashboard inside Django Admin.
 
-![Dashboard](assets/2026-02-16-16-19-29.png)
-
 ## Features
 
 - Per-request timing, route, method, status code, and tags
@@ -40,7 +38,7 @@ MIDDLEWARE = [
 ]
 ```
 
-### 3. Configure a backend (see [Backends](#backends))
+### 3. Configure a backend
 
 By default the **Dummy** backend is used, which discards all data. Switch to Redis to persist records:
 
