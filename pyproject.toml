@@ -23,6 +23,8 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+  "fakeredis>=2.34.0",
+  "pytest>=9.0.2",
   "redis>=7.1.1",
   "ruff>=0.15.1",
 ]
@@ -68,6 +70,7 @@ lint.per-file-ignores."__init__.py" = [ "F401" ]  # unused imports in __init__.p
 lint.per-file-ignores."tests/**/*.py" = [
   "DJ008", # Model does not define __str__ method
   "F821",  # Undefined name
+  "N806",  # Variable in function should be lowercase
 ]
 lint.isort.section-order = [
   "future",
@@ -76,3 +79,4 @@ lint.isort.section-order = [
   "first-party",
   "local-folder",
 ]
+
