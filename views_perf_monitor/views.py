@@ -175,12 +175,6 @@ def _build_routes_chart_data(stats: list[RouteStats]) -> str:
     )
 
 
-def _get_tag_stats(
-    breakdown: dict[str, dict[str, RouteTagStats]], route: str, tag: str
-) -> RouteTagStats | None:
-    return breakdown.get(route, {}).get(tag)
-
-
 def _build_route_tag_chart_data(
     routes_stats: list[RouteStats], breakdown: dict[str, dict[str, RouteTagStats]]
 ) -> str:
@@ -195,13 +189,13 @@ def _build_route_tag_chart_data(
                     "tag": tag,
                     "avgs": [
                         round(s.avg, 4)
-                        if (s := _get_tag_stats(breakdown, route, tag)) is not None
+                        if (s := breakdown.get(route, {}).get(tag)) is not None
                         else None
                         for route in route_order
                     ],
                     "counts": [
                         s.count
-                        if (s := _get_tag_stats(breakdown, route, tag)) is not None
+                        if (s := breakdown.get(route, {}).get(tag)) is not None
                         else None
                         for route in route_order
                     ],

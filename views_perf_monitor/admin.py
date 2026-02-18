@@ -1,6 +1,10 @@
 from django.urls import path, reverse
 
-from views_perf_monitor.views import dashboard_view, route_breakdown_view, tag_breakdown_view
+from views_perf_monitor.views import (
+    dashboard_view,
+    route_breakdown_view,
+    tag_breakdown_view,
+)
 
 
 def patch_admin_site(site):
@@ -55,5 +59,3 @@ def patch_admin_site(site):
         return app_list
 
     site.get_app_list = new_get_app_list
-
-
