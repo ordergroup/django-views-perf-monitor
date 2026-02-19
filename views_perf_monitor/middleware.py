@@ -25,6 +25,9 @@ def default_get_request_id(request: HttpRequest) -> str:
     return str(uuid4())
 
 
+DEFAULT_RECORD_UNTAGGED = True
+
+
 def perf_middleware(get_response: Callable[[HttpRequest], HttpResponse]):
     backend = get_performance_monitor_backend()
 
@@ -51,6 +54,13 @@ def perf_middleware(get_response: Callable[[HttpRequest], HttpResponse]):
         except Exception:
             logger.exception("failed to extract request tags")
             request_tags = []
+
+        should_save = request_tags or getattr(
+            settings, "VIEWS_PERF_RECORD_UNTAGGED", DEFAULT_RECORD_UNTAGGED
+        )
+
+        if not should_save:
+            return response
 
         try:
             request_id_callable: Callable[[HttpRequest], str] = getattr(
