@@ -123,6 +123,102 @@
   const tagBreakdownUrl = container.dataset.tagBreakdownUrl;
   const routeBreakdownUrl = container.dataset.routeBreakdownUrl;
 
+  // ── Trend chart ───────────────────────────────────────────
+  const trendRaw = container.dataset.trendChart;
+  if (trendRaw) {
+    const trendData = JSON.parse(trendRaw);
+    const labels = Object.keys(trendData).map((h) => {
+      const d = new Date(h);
+      return d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });
+    });
+    new Chart(document.getElementById("chartTrend"), {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          label: "Requests",
+          data: Object.values(trendData),
+          borderColor: "rgba(99,179,237,1)",
+          backgroundColor: "rgba(99,179,237,0.15)",
+          borderWidth: 2,
+          pointRadius: labels.length > 48 ? 0 : 3,
+          fill: true,
+          tension: 0.3,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => ` ${ctx.parsed.y} requests`,
+            },
+          },
+        },
+        scales: {
+          x: {
+            grid: { color: gridColor },
+            ticks: {
+              ...tickStyle(),
+              maxTicksLimit: 12,
+              maxRotation: 0,
+            },
+          },
+          y: {
+            grid: { color: gridColor },
+            ticks: { ...tickStyle(), precision: 0 },
+            beginAtZero: true,
+          },
+        },
+      },
+    });
+  }
+
+  // ── Status code chart ─────────────────────────────────────
+  const statusRaw = container.dataset.statusChart;
+  if (statusRaw) {
+    const statusRows = JSON.parse(statusRaw);
+
+    const groupColors = {
+      "2xx": { bg: "rgba(34,197,94,0.75)",  border: "rgba(21,128,61,1)"  },
+      "3xx": { bg: "rgba(34,211,238,0.75)", border: "rgba(14,116,144,1)" },
+      "4xx": { bg: "rgba(251,191,36,0.75)", border: "rgba(146,64,14,1)"  },
+      "5xx": { bg: "rgba(239,68,68,0.75)",  border: "rgba(185,28,28,1)"  },
+      "other": { bg: "rgba(161,161,170,0.75)", border: "rgba(63,63,70,1)" },
+    };
+
+    new Chart(document.getElementById("chartStatusCode"), {
+      type: "doughnut",
+      data: {
+        labels: statusRows.map((r) => String(r.status_code)),
+        datasets: [{
+          data: statusRows.map((r) => r.count),
+          backgroundColor: statusRows.map((r) => (groupColors[r.group] ?? groupColors["other"]).bg),
+          borderColor: statusRows.map((r) => (groupColors[r.group] ?? groupColors["other"]).border),
+          borderWidth: 1,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: "right",
+            labels: { color: labelColor, font: { family: fontFamily, size: 12 } },
+          },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => ` ${ctx.label}: ${ctx.parsed} requests`,
+            },
+          },
+        },
+      },
+    });
+  }
+
   // ── Tag charts ────────────────────────────────────────────
   const tagsRaw = container.dataset.tagsChart;
   if (tagsRaw) {
@@ -316,3 +412,5 @@
     });
   }
 })();
+
+

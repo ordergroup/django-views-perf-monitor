@@ -13,6 +13,16 @@
 
 <div class="module">
   <h2>Requests for tag <code>{{ tag }}</code></h2>
+  {% if status_stats %}
+  <div class="perf-status-summary">
+    {% for row in status_stats %}
+    <span class="perf-status-summary__item">
+      <span class="status-badge status-badge--{{ row.status_code|stringformat:'d'|slice:':1' }}xx">{{ row.status_code }}</span>
+      <span class="perf-status-summary__count">{{ row.count }}</span>
+    </span>
+    {% endfor %}
+  </div>
+  {% endif %}
   <form class="perf-filter-form" method="get" action="">
     <input type="hidden" name="tag" value="{{ tag }}">
     <input type="hidden" name="sort" value="{{ sort }}">
@@ -69,7 +79,9 @@
         <td>{{ record.timestamp|date:"Y-m-d H:i:s" }}</td>
         <td><code>{{ record.route }}</code></td>
         <td>{{ record.method }}</td>
-        <td>{{ record.status_code }}</td>
+        <td>
+          <span class="status-badge status-badge--{{ record.status_code|stringformat:'d'|slice:':1' }}xx">{{ record.status_code }}</span>
+        </td>
         <td>{{ record.duration|floatformat:2 }}</td>
         <td><code>{{ record.request_id }}</code></td>
       </tr>

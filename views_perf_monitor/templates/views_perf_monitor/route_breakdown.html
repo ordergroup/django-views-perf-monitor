@@ -64,7 +64,9 @@
       <tr>
         <td>{{ record.timestamp|date:"Y-m-d H:i:s" }}</td>
         <td>{{ record.method }}</td>
-        <td>{{ record.status_code }}</td>
+        <td>
+          <span class="status-badge status-badge--{{ record.status_code|stringformat:'d'|slice:':1' }}xx">{{ record.status_code }}</span>
+        </td>
         <td>{{ record.duration|floatformat:2 }}</td>
         <td>
           {% for tag in record.tags %}

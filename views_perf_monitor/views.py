@@ -11,7 +11,13 @@ from django.template.response import TemplateResponse
 from views_perf_monitor.backends import PerformanceRecordQueryBuilder
 from views_perf_monitor.backends.factory import get_performance_monitor_backend
 from views_perf_monitor.models import RouteStats, RouteTagStats, TagStats
-from views_perf_monitor.stats import all_stats, route_tag_breakdown, weighted_avg
+from views_perf_monitor.stats import (
+    all_stats,
+    request_trend,
+    route_tag_breakdown,
+    status_code_stats,
+    weighted_avg,
+)
 
 VALID_SORT_FIELDS = {"avg", "count"}
 
@@ -28,6 +34,8 @@ def dashboard_view(request: HttpRequest, site: AdminSite) -> TemplateResponse:
 
     tags_stats, routes_stats = all_stats(records)
     route_tag_breakdown_stats = route_tag_breakdown(records)
+    status_stats = status_code_stats(records)
+    trend_data = request_trend(records)
 
     tags_stats = sorted(tags_stats, key=lambda r: getattr(r, sort, 0), reverse=True)
     routes_stats = sorted(routes_stats, key=lambda r: getattr(r, sort, 0), reverse=True)
@@ -55,6 +63,9 @@ def dashboard_view(request: HttpRequest, site: AdminSite) -> TemplateResponse:
         "route_tag_chart_data": _build_route_tag_chart_data(
             routes_stats, route_tag_breakdown_stats
         ),
+        "status_stats": status_stats,
+        "status_chart_data": _build_status_chart_data(status_stats),
+        "trend_chart_data": json.dumps(trend_data) if trend_data else "",
     }
     return TemplateResponse(request, "views_perf_monitor/dashboard.html", context)
 
@@ -87,6 +98,7 @@ def tag_breakdown_view(request: HttpRequest, site: AdminSite) -> TemplateRespons
     )
 
     records = backend.fetch(query)
+    tag_status_stats = status_code_stats(records)
     paginator = Paginator(records, 50)
     page = paginator.get_page(request.GET.get("page", 1))
 
@@ -95,6 +107,7 @@ def tag_breakdown_view(request: HttpRequest, site: AdminSite) -> TemplateRespons
         **site.each_context(request),
         "title": f"Tag: {tag}",
         "tag": tag,
+        "status_stats": tag_status_stats,
         "page_obj": page,
         "page_range": paginator.get_elided_page_range(
             page.number, on_each_side=2, on_ends=1
@@ -172,6 +185,15 @@ def _build_tags_chart_data(stats: list[TagStats]) -> str:
 def _build_routes_chart_data(stats: list[RouteStats]) -> str:
     return json.dumps(
         [{"route": r.route, "avg": round(r.avg, 4), "count": r.count} for r in stats]
+    )
+
+
+def _build_status_chart_data(stats) -> str:
+    return json.dumps(
+        [
+            {"status_code": s.status_code, "count": s.count, "group": s.group}
+            for s in stats
+        ]
     )
 
 

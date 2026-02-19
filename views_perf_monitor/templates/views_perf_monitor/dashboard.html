@@ -23,6 +23,7 @@
   </form>
 </div>
 
+
 {% if all_tags %}
 <div class="module perf-chart-module">
   <h2>Avg Response Time by Route &times; Tag (ms)</h2>
@@ -67,9 +68,11 @@
         <th>Tag</th>
         <th>
           <a href="?sort=avg" {% if sort == "avg" %}class="sort-active"{% endif %}>
-            Avg Duration (ms) {% if sort == "avg" %}&darr;{% endif %}
+            Avg (ms) {% if sort == "avg" %}&darr;{% endif %}
           </a>
         </th>
+        <th>P95 (ms)</th>
+        <th>P99 (ms)</th>
         <th>
           <a href="?sort=count" {% if sort == "count" %}class="sort-active"{% endif %}>
             Requests {% if sort == "count" %}&darr;{% endif %}
@@ -86,6 +89,8 @@
           </a>
         </td>
         <td>{{ row.avg|floatformat:2 }}</td>
+        <td>{{ row.p95|floatformat:2 }}</td>
+        <td>{{ row.p99|floatformat:2 }}</td>
         <td>{{ row.count }}</td>
       </tr>
       {% endfor %}
@@ -94,6 +99,8 @@
       <tr>
         <td><strong>Total</strong></td>
         <td><strong>{{ tags_total_avg|floatformat:2 }}</strong></td>
+        <td></td>
+        <td></td>
         <td><strong>{{ tags_total_count }}</strong></td>
       </tr>
     </tfoot>
@@ -123,7 +130,7 @@
 {% endif %}
 
 <div class="module perf-chart-module">
-<details class="module perf-accordion">
+<details class="module perf-accordion" open>
   <summary><h2 class="perf-accordion-summary">Response Time by Route</h2></summary>
   {% if routes_stats %}
   <table class="perf-table">
@@ -132,14 +139,19 @@
         <th>Route</th>
         <th>
           <a href="?sort=avg" {% if sort == "avg" %}class="sort-active"{% endif %}>
-            Avg Duration (ms) {% if sort == "avg" %}&darr;{% endif %}
+            Avg (ms) {% if sort == "avg" %}&darr;{% endif %}
           </a>
         </th>
+        <th>P95 (ms)</th>
+        <th>P99 (ms)</th>
+        <th>Min (ms)</th>
+        <th>Max (ms)</th>
         <th>
           <a href="?sort=count" {% if sort == "count" %}class="sort-active"{% endif %}>
             Requests {% if sort == "count" %}&darr;{% endif %}
           </a>
         </th>
+        <th>Errors</th>
       </tr>
     </thead>
     <tbody>
@@ -151,7 +163,20 @@
           </a>
         </td>
         <td>{{ row.avg|floatformat:2 }}</td>
+        <td>{{ row.p95|floatformat:2 }}</td>
+        <td>{{ row.p99|floatformat:2 }}</td>
+        <td>{{ row.min_duration|floatformat:2 }}</td>
+        <td>{{ row.max_duration|floatformat:2 }}</td>
         <td>{{ row.count }}</td>
+        <td>
+          {% if row.error_count %}
+          <span class="perf-error-rate {% if row.error_rate >= 10 %}perf-error-rate--high{% elif row.error_rate >= 1 %}perf-error-rate--mid{% endif %}">
+            {{ row.error_count }} ({{ row.error_rate }}%)
+          </span>
+          {% else %}
+          <span class="perf-error-rate--none">&mdash;</span>
+          {% endif %}
+        </td>
       </tr>
       {% endfor %}
     </tbody>
@@ -159,7 +184,12 @@
       <tr>
         <td><strong>Total</strong></td>
         <td><strong>{{ routes_total_avg|floatformat:2 }}</strong></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
         <td><strong>{{ routes_total_count }}</strong></td>
+        <td></td>
       </tr>
     </tfoot>
   </table>
@@ -169,8 +199,61 @@
 </details>
 </div>
 
-{% if tags_stats or routes_stats %}
+{% if trend_chart_data %}
+<div class="module perf-chart-module">
+  <h2>Requests per Hour</h2>
+  <div class="perf-chart-wrap perf-chart-wrap--trend">
+    <canvas id="chartTrend"></canvas>
+  </div>
+</div>
+{% endif %}
+
+{% if status_stats %}
+<div class="perf-charts-grid">
+  <div class="module perf-chart-module">
+    <h2>Requests by Status Code</h2>
+    <div class="perf-chart-wrap">
+      <canvas id="chartStatusCode"></canvas>
+    </div>
+  </div>
+
+  <div class="module perf-chart-module">
+    <h2>Status Code Breakdown</h2>
+    <table class="perf-table">
+      <thead>
+        <tr>
+          <th>Status Code</th>
+          <th>Requests</th>
+          <th>% of Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in status_stats %}
+        <tr>
+          <td>
+            <span class="status-badge status-badge--{{ row.status_code|stringformat:'d'|slice:':1' }}xx">{{ row.status_code }}</span>
+          </td>
+          <td>{{ row.count }}</td>
+          <td>{% widthratio row.count routes_total_count 100 %}%</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td><strong>Total</strong></td>
+          <td><strong>{{ routes_total_count }}</strong></td>
+          <td><strong>100%</strong></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{% if trend_chart_data or status_stats or tags_stats or routes_stats %}
 <div id="perf-dashboard-data"
+  {% if trend_chart_data %}data-trend-chart="{{ trend_chart_data }}"{% endif %}
+  {% if status_stats %}data-status-chart="{{ status_chart_data }}"{% endif %}
   {% if tags_stats %}data-tags-chart="{{ tags_chart_data }}"{% endif %}
   {% if routes_stats %}data-routes-chart="{{ routes_chart_data }}"{% endif %}
   {% if all_tags %}data-route-tag-chart="{{ route_tag_chart_data }}"{% endif %}
@@ -182,5 +265,18 @@
 <script src="{% static 'views_perf_monitor/dashboard.js' %}"></script>
 {% endif %}
 {% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

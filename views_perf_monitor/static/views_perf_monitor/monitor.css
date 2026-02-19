@@ -20,6 +20,13 @@
     border-bottom-color: rgb(63 63 70);
 }
 
+@media (prefers-color-scheme: dark) {
+    .perf-table th,
+    .perf-table td {
+        border-bottom-color: rgb(63 63 70);
+    }
+}
+
 .perf-table th {
     background: rgb(244 244 245);
     font-weight: 600;
@@ -28,6 +35,12 @@
 .dark .perf-table th,
 [data-theme="dark"] .perf-table th {
     background: rgb(39 39 42);
+}
+
+@media (prefers-color-scheme: dark) {
+    .perf-table th {
+        background: rgb(39 39 42);
+    }
 }
 
 .perf-table th a {
@@ -50,6 +63,12 @@
 .dark .perf-table tr:hover td,
 [data-theme="dark"] .perf-table tr:hover td {
     background: rgb(39 39 42);
+}
+
+@media (prefers-color-scheme: dark) {
+    .perf-table tr:hover td {
+        background: rgb(39 39 42);
+    }
 }
 
 /* ── Charts ───────────────────────────────────────────────── */
@@ -108,6 +127,15 @@
     color-scheme: dark;
 }
 
+@media (prefers-color-scheme: dark) {
+    .perf-filter-input {
+        border-color: rgb(63 63 70);
+        background: rgb(24 24 27);
+        color: rgb(244 244 245);
+        color-scheme: dark;
+    }
+}
+
 .perf-filter-input:focus {
     outline: none;
     border-color: rgb(59 130 246);
@@ -138,6 +166,12 @@
 .dark .perf-date-label,
 [data-theme="dark"] .perf-date-label {
     color: rgb(161 161 170);
+}
+
+@media (prefers-color-scheme: dark) {
+    .perf-date-label {
+        color: rgb(161 161 170);
+    }
 }
 
 .perf-filter-clear {
@@ -185,6 +219,10 @@ details[open] .perf-accordion-summary::before {
     height: 400px;
 }
 
+.perf-chart-wrap--trend {
+    height: 200px;
+}
+
 /* ── Empty state ──────────────────────────────────────────── */
 
 .perf-empty-state {
@@ -198,4 +236,157 @@ details[open] .perf-accordion-summary::before {
 .back-link {
     display: inline-block;
     margin-bottom: 1rem;
+}
+
+/* ── Error rate indicators ────────────────────────────────── */
+
+.perf-error-rate {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgb(63 63 70);
+}
+
+.perf-error-rate--mid {
+    color: rgb(146 64 14);
+}
+
+.perf-error-rate--high {
+    color: rgb(185 28 28);
+}
+
+.perf-error-rate--none {
+    color: rgb(161 161 170);
+}
+
+@media (prefers-color-scheme: dark) {
+    .perf-error-rate { color: rgb(161 161 170); }
+    .perf-error-rate--mid { color: rgb(253 186 116); }
+    .perf-error-rate--high { color: rgb(252 165 165); }
+}
+
+.dark .perf-error-rate--mid,
+[data-theme="dark"] .perf-error-rate--mid { color: rgb(253 186 116); }
+
+.dark .perf-error-rate--high,
+[data-theme="dark"] .perf-error-rate--high { color: rgb(252 165 165); }
+
+/* ── Compact status summary strip ────────────────────────── */
+
+.perf-status-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.6rem 0 0.25rem;
+}
+
+.perf-status-summary__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.perf-status-summary__count {
+    font-size: 12px;
+    color: rgb(63 63 70);
+}
+
+@media (prefers-color-scheme: dark) {
+    .perf-status-summary__count {
+        color: rgb(161 161 170);
+    }
+}
+
+.dark .perf-status-summary__count,
+[data-theme="dark"] .perf-status-summary__count {
+    color: rgb(161 161 170);
+}
+
+/* ── Status code badges ───────────────────────────────────── */
+
+.status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: monospace;
+    letter-spacing: 0.02em;
+}
+
+.status-badge--2xx {
+    background: rgb(220 252 231);
+    color: rgb(21 128 61);
+}
+
+.status-badge--3xx {
+    background: rgb(207 250 254);
+    color: rgb(14 116 144);
+}
+
+.status-badge--4xx {
+    background: rgb(254 243 199);
+    color: rgb(146 64 14);
+}
+
+.status-badge--5xx {
+    background: rgb(254 226 226);
+    color: rgb(185 28 28);
+}
+
+.status-badge--other {
+    background: rgb(244 244 245);
+    color: rgb(63 63 70);
+}
+
+.dark .status-badge--2xx,
+[data-theme="dark"] .status-badge--2xx {
+    background: rgb(20 83 45);
+    color: rgb(187 247 208);
+}
+
+.dark .status-badge--3xx,
+[data-theme="dark"] .status-badge--3xx {
+    background: rgb(8 70 88);
+    color: rgb(165 243 252);
+}
+
+.dark .status-badge--4xx,
+[data-theme="dark"] .status-badge--4xx {
+    background: rgb(120 53 15);
+    color: rgb(253 230 138);
+}
+
+.dark .status-badge--5xx,
+[data-theme="dark"] .status-badge--5xx {
+    background: rgb(127 29 29);
+    color: rgb(254 202 202);
+}
+
+.dark .status-badge--other,
+[data-theme="dark"] .status-badge--other {
+    background: rgb(39 39 42);
+    color: rgb(161 161 170);
+}
+
+@media (prefers-color-scheme: dark) {
+    .status-badge--2xx {
+        background: rgb(20 83 45);
+        color: rgb(187 247 208);
+    }
+    .status-badge--3xx {
+        background: rgb(8 70 88);
+        color: rgb(165 243 252);
+    }
+    .status-badge--4xx {
+        background: rgb(120 53 15);
+        color: rgb(253 230 138);
+    }
+    .status-badge--5xx {
+        background: rgb(127 29 29);
+        color: rgb(254 202 202);
+    }
+    .status-badge--other {
+        background: rgb(39 39 42);
+        color: rgb(161 161 170);
+    }
 }

@@ -10,6 +10,8 @@ class TagStats:
     tag: str
     avg: float
     count: int
+    p95: float = 0.0
+    p99: float = 0.0
 
 
 @dataclass
@@ -17,12 +19,25 @@ class RouteStats:
     route: str
     avg: float
     count: int
+    p95: float = 0.0
+    p99: float = 0.0
+    error_count: int = 0
+    error_rate: float = 0.0  # percentage 0-100
+    min_duration: float = 0.0
+    max_duration: float = 0.0
 
 
 @dataclass
 class RouteTagStats:
     avg: float
     count: int
+
+
+@dataclass
+class StatusCodeStats:
+    status_code: int
+    count: int
+    group: str  # "2xx", "3xx", "4xx", "5xx", "other"
 
 
 @dataclass
