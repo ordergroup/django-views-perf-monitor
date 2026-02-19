@@ -3,12 +3,29 @@
   if (!container) return;
 
   // ── Theme / style helpers ─────────────────────────────────
-  const isDark =
-    document.documentElement.classList.contains("dark") ||     // Unfold
-    document.documentElement.dataset.theme === "dark";         // Classic Django admin 4.2+
+  // Detection order:
+  // 1. Unfold stores theme in localStorage under "_x_adminTheme" via Alpine $persist
+  // 2. Unfold/Tailwind adds .dark class to <html> (may not be set yet if Alpine hasn't run)
+  // 3. Classic Django admin 4.2+ uses [data-theme="dark"] on <html>
+  // 4. OS preference as final fallback
+  function resolveIsDark() {
+    const stored =
+      localStorage.getItem("adminTheme") ??
+      localStorage.getItem("_x_adminTheme");
+    if (stored) {
+      const val = stored.replace(/^"|"$/g, "");
+      if (val === "dark") return true;
+      if (val === "light") return false;
+      // "auto" — fall through to OS preference
+    }
+    if (document.documentElement.classList.contains("dark")) return true;
+    if (document.documentElement.dataset.theme === "dark") return true;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  const isDark = resolveIsDark();
 
-  const gridColor = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)";
-  const labelColor = isDark ? "#ccc" : "#333";
+  const gridColor = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.07)";
+  const labelColor = isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.75)";
   const fontFamily = getComputedStyle(document.body).fontFamily || "sans-serif";
 
   const tickStyle = (size = 12) => ({
