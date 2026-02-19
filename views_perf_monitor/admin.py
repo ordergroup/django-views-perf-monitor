@@ -1,3 +1,5 @@
+import inspect
+
 from django.urls import path, reverse
 
 from views_perf_monitor.views import (
@@ -33,8 +35,15 @@ def patch_admin_site(site):
 
     site.get_urls = new_get_urls
 
+    _orig_supports_app_label = (
+        "app_label" in inspect.signature(_orig_get_app_list).parameters
+    )
+
     def new_get_app_list(request, app_label=None):
-        app_list = _orig_get_app_list(request, app_label=app_label)
+        if _orig_supports_app_label:
+            app_list = _orig_get_app_list(request, app_label=app_label)
+        else:
+            app_list = _orig_get_app_list(request)
         if app_label is None or app_label == "views_perf_monitor":
             dashboard_url = reverse(f"{site.name}:views_perf_monitor_dashboard")
 
