@@ -4,10 +4,8 @@
 
   // ── Theme / style helpers ─────────────────────────────────
   const isDark =
-    document.documentElement.dataset.theme === "dark" ||
-    getComputedStyle(document.documentElement)
-      .getPropertyValue("--body-bg")
-      .trim() === "#121212";
+    document.documentElement.classList.contains("dark") ||     // Unfold
+    document.documentElement.dataset.theme === "dark";         // Classic Django admin 4.2+
 
   const gridColor = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)";
   const labelColor = isDark ? "#ccc" : "#333";
