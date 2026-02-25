@@ -1,7 +1,13 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 
-from views_perf_monitor.models import PerformanceRecord
+from views_perf_monitor.models import (
+    PerformanceRecord,
+    RouteStats,
+    RouteTagStats,
+    StatusCodeStats,
+    TagStats,
+)
 
 
 class PerformanceRecordQueryBuilder:
@@ -11,6 +17,8 @@ class PerformanceRecordQueryBuilder:
         self.since: datetime | None = None
         self.until: datetime | None = None
         self.order_by_field: str | None = None
+        self.order_direction: str = "desc"  # 'asc' or 'desc'
+        self.limit_records: int | None = None
 
     @classmethod
     def for_tag(cls, tag: str) -> "PerformanceRecordTagQueryBuilder":
@@ -31,8 +39,15 @@ class PerformanceRecordQueryBuilder:
         self.until = until
         return self
 
-    def order_by(self, field: str) -> "PerformanceRecordQueryBuilder":
+    def order_by(
+        self, field: str, direction: str = "desc"
+    ) -> "PerformanceRecordQueryBuilder":
         self.order_by_field = field
+        self.order_direction = direction if direction in ("asc", "desc") else "desc"
+        return self
+
+    def limit(self, limit: int | None) -> "PerformanceRecordQueryBuilder":
+        self.limit_records = limit
         return self
 
 
@@ -41,10 +56,22 @@ class PerformanceRecordTagQueryBuilder(PerformanceRecordQueryBuilder):
         self.route_filter = route
         return self
 
+    def filter_by_status_code(
+        self, status_code: int
+    ) -> "PerformanceRecordTagQueryBuilder":
+        self.status_code_filter = status_code
+        return self
+
 
 class PerformanceRecordRouteQueryBuilder(PerformanceRecordQueryBuilder):
     def filter_by_tag(self, tag: str) -> "PerformanceRecordRouteQueryBuilder":
         self.tag_filter = tag
+        return self
+
+    def filter_by_status_code(
+        self, status_code: int
+    ) -> "PerformanceRecordRouteQueryBuilder":
+        self.status_code_filter = status_code
         return self
 
 
@@ -62,3 +89,54 @@ class PerformanceMonitorBackend(ABC):
 
     @abstractmethod
     def get_all_routes(self) -> list[str]: ...
+
+    @abstractmethod
+    def get_tags_stats(self, query: PerformanceRecordQueryBuilder) -> list[TagStats]:
+        """Get tag statistics."""
+
+    @abstractmethod
+    def get_routes_stats(
+        self, query: PerformanceRecordQueryBuilder
+    ) -> list[RouteStats]:
+        """Get route statistics."""
+
+    @abstractmethod
+    def weighted_avg(self, query: PerformanceRecordQueryBuilder) -> tuple[int, float]:
+        """
+        Calculate weighted average from route stats.
+
+        Returns:
+            tuple: (total_count, weighted_avg)
+        """
+
+    @abstractmethod
+    def route_tag_breakdown(
+        self, query: PerformanceRecordQueryBuilder
+    ) -> dict[str, dict[str, RouteTagStats]]:
+        """Get route-tag performance breakdown."""
+
+    @abstractmethod
+    def request_trend(self, query: PerformanceRecordQueryBuilder) -> dict[str, int]:
+        """Returns an ordered dict of ISO hour string -> request count."""
+
+    @abstractmethod
+    def status_code_stats(
+        self, query: PerformanceRecordQueryBuilder
+    ) -> list[StatusCodeStats]:
+        """Get status code distribution."""
+
+    @abstractmethod
+    def is_recording_enabled(self) -> bool:
+        """Check if recording is currently enabled."""
+
+    @abstractmethod
+    def enable_recording(self) -> None:
+        """Enable recording of performance data."""
+
+    @abstractmethod
+    def disable_recording(self) -> None:
+        """Disable recording of performance data."""
+
+    @abstractmethod
+    def clear_data(self) -> None:
+        """Clear all performance data."""

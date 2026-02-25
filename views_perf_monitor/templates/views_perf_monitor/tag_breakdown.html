@@ -13,13 +13,18 @@
 
 <div class="module">
   <h2>Requests for tag <code>{{ tag }}</code></h2>
+  <div class="perf-info-banner">
+    <strong>Note:</strong> Data is limited to the most recent {{ requests_limit|default:"100,000" }} requests matching your filters.
+  </div>
   {% if status_stats %}
   <div class="perf-status-summary">
     {% for row in status_stats %}
-    <span class="perf-status-summary__item">
+    <a href="?tag={{ tag|urlencode }}&status_code={{ row.status_code }}&route={{ route_filter|urlencode }}&since={{ since|urlencode }}&until={{ until|urlencode }}&sort={{ sort }}" 
+       class="perf-status-summary__item{% if status_code_filter == row.status_code|stringformat:'d' %} perf-status-summary__item--active{% endif %}" 
+       style="text-decoration: none;">
       <span class="status-badge status-badge--{{ row.status_code|stringformat:'d'|slice:':1' }}xx">{{ row.status_code }}</span>
       <span class="perf-status-summary__count">{{ row.count }}</span>
-    </span>
+    </a>
     {% endfor %}
   </div>
   {% endif %}
@@ -32,12 +37,13 @@
       <option value="{{ r }}" {% if r == route_filter %}selected{% endif %}>{{ r }}</option>
       {% endfor %}
     </select>
+    <input class="perf-filter-input" type="text" name="status_code" placeholder="Status code" value="{{ status_code_filter }}" style="width: 100px;">
     <label class="perf-date-label">From</label>
     <input class="perf-filter-input" type="datetime-local" name="since" value="{{ since }}">
     <label class="perf-date-label">To</label>
     <input class="perf-filter-input" type="datetime-local" name="until" value="{{ until }}">
     <button class="perf-filter-btn" type="submit">Filter</button>
-    {% if route_filter or since or until %}
+    {% if route_filter or status_code_filter or since or until %}
     <a class="perf-filter-clear" href="?tag={{ tag|urlencode }}&sort={{ sort }}">Clear</a>
     {% endif %}
   </form>
@@ -46,28 +52,28 @@
     <thead>
       <tr>
         <th>
-          <a href="?tag={{ tag|urlencode }}&sort=timestamp" {% if sort == "timestamp" %}class="sort-active"{% endif %}>
-            Timestamp {% if sort == "timestamp" %}&darr;{% endif %}
+          <a href="?tag={{ tag|urlencode }}&sort=timestamp&order={% if sort == 'timestamp' and order == 'desc' %}asc{% else %}desc{% endif %}" {% if sort == "timestamp" %}class="sort-active"{% endif %}>
+            Timestamp {% if sort == "timestamp" %}{% if order == "asc" %}&uarr;{% else %}&darr;{% endif %}{% endif %}
           </a>
         </th>
         <th>
-          <a href="?tag={{ tag|urlencode }}&sort=route" {% if sort == "route" %}class="sort-active"{% endif %}>
-            Route {% if sort == "route" %}&darr;{% endif %}
+          <a href="?tag={{ tag|urlencode }}&sort=route&order={% if sort == 'route' and order == 'desc' %}asc{% else %}desc{% endif %}" {% if sort == "route" %}class="sort-active"{% endif %}>
+            Route {% if sort == "route" %}{% if order == "asc" %}&uarr;{% else %}&darr;{% endif %}{% endif %}
           </a>
         </th>
         <th>
-          <a href="?tag={{ tag|urlencode }}&sort=method" {% if sort == "method" %}class="sort-active"{% endif %}>
-            Method {% if sort == "method" %}&darr;{% endif %}
+          <a href="?tag={{ tag|urlencode }}&sort=method&order={% if sort == 'method' and order == 'desc' %}asc{% else %}desc{% endif %}" {% if sort == "method" %}class="sort-active"{% endif %}>
+            Method {% if sort == "method" %}{% if order == "asc" %}&uarr;{% else %}&darr;{% endif %}{% endif %}
           </a>
         </th>
         <th>
-          <a href="?tag={{ tag|urlencode }}&sort=status_code" {% if sort == "status_code" %}class="sort-active"{% endif %}>
-            Status {% if sort == "status_code" %}&darr;{% endif %}
+          <a href="?tag={{ tag|urlencode }}&sort=status_code&order={% if sort == 'status_code' and order == 'desc' %}asc{% else %}desc{% endif %}" {% if sort == "status_code" %}class="sort-active"{% endif %}>
+            Status {% if sort == "status_code" %}{% if order == "asc" %}&uarr;{% else %}&darr;{% endif %}{% endif %}
           </a>
         </th>
         <th>
-          <a href="?tag={{ tag|urlencode }}&sort=duration" {% if sort == "duration" %}class="sort-active"{% endif %}>
-            Duration (ms) {% if sort == "duration" %}&darr;{% endif %}
+          <a href="?tag={{ tag|urlencode }}&sort=duration&order={% if sort == 'duration' and order == 'desc' %}asc{% else %}desc{% endif %}" {% if sort == "duration" %}class="sort-active"{% endif %}>
+            Duration (ms) {% if sort == "duration" %}{% if order == "asc" %}&uarr;{% else %}&darr;{% endif %}{% endif %}
           </a>
         </th>
         <th>Request ID</th>
@@ -94,5 +100,9 @@
   {% endif %}
 </div>
 {% endblock %}
+
+
+
+
 
 

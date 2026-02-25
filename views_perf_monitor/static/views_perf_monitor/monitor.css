@@ -1,3 +1,168 @@
+/* ── Recording toggle ─────────────────────────────────────── */
+
+.perf-recording-toggle {
+    margin-bottom: 1.5rem;
+}
+
+.perf-recording-toggle__header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.perf-recording-toggle__header h2 {
+    margin: 0;
+}
+
+.perf-recording-toggle__controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.perf-recording-toggle__description {
+    margin: 0;
+    font-size: 13px;
+    color: rgb(63 63 70);
+}
+
+.dark .perf-recording-toggle__description,
+[data-theme="dark"] .perf-recording-toggle__description {
+    color: rgb(161 161 170);
+}
+
+@media (prefers-color-scheme: dark) {
+    .perf-recording-toggle__description {
+        color: rgb(161 161 170);
+    }
+}
+
+.perf-toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 28px;
+}
+
+.perf-toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.perf-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgb(212 212 216);
+    transition: 0.3s;
+    border-radius: 28px;
+}
+
+.perf-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+.perf-toggle-switch input:checked + .perf-toggle-slider {
+    background-color: rgb(34 197 94);
+}
+
+.perf-toggle-switch input:focus + .perf-toggle-slider {
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
+}
+
+.perf-toggle-switch input:checked + .perf-toggle-slider:before {
+    transform: translateX(24px);
+}
+
+.dark .perf-toggle-slider,
+[data-theme="dark"] .perf-toggle-slider {
+    background-color: rgb(63 63 70);
+}
+
+@media (prefers-color-scheme: dark) {
+    .perf-toggle-slider {
+        background-color: rgb(63 63 70);
+    }
+}
+
+.dark .perf-toggle-switch input:checked + .perf-toggle-slider,
+[data-theme="dark"] .perf-toggle-switch input:checked + .perf-toggle-slider {
+    background-color: rgb(34 197 94);
+}
+
+@media (prefers-color-scheme: dark) {
+    .perf-toggle-switch input:checked + .perf-toggle-slider {
+        background-color: rgb(34 197 94);
+    }
+}
+
+.perf-clear-data-btn {
+    padding: 6px 14px;
+    background: rgb(239 68 68);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.perf-clear-data-btn:hover {
+    background: rgb(220 38 38);
+}
+
+.perf-clear-data-btn:active {
+    background: rgb(185 28 28);
+}
+
+.perf-clear-data-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);
+}
+
+.dark .perf-clear-data-btn,
+[data-theme="dark"] .perf-clear-data-btn {
+    background: rgb(220 38 38);
+}
+
+.dark .perf-clear-data-btn:hover,
+[data-theme="dark"] .perf-clear-data-btn:hover {
+    background: rgb(239 68 68);
+}
+
+.dark .perf-clear-data-btn:active,
+[data-theme="dark"] .perf-clear-data-btn:active {
+    background: rgb(185 28 28);
+}
+
+@media (prefers-color-scheme: dark) {
+    .perf-clear-data-btn {
+        background: rgb(220 38 38);
+    }
+    
+    .perf-clear-data-btn:hover {
+        background: rgb(239 68 68);
+    }
+    
+    .perf-clear-data-btn:active {
+        background: rgb(185 28 28);
+    }
+}
+
 /* ── Perf monitor tables ──────────────────────────────────── */
 
 .perf-table {
@@ -86,9 +251,6 @@
     }
 }
 
-.perf-chart-module {
-    padding: 1rem 1.5rem 1.5rem;
-}
 
 .perf-chart-module h2 {
     margin-bottom: 0.75rem;
@@ -184,37 +346,6 @@
     text-decoration: underline;
 }
 
-/* ── Accordion ────────────────────────────────────────────── */
-
-.perf-accordion {
-    padding: 0;
-}
-
-.perf-accordion > summary {
-    display: block;
-    list-style: none;
-    padding: 0;
-    cursor: pointer;
-    user-select: none;
-}
-
-.perf-accordion > summary::-webkit-details-marker {
-    display: none;
-}
-
-.perf-accordion-summary {
-    display: block;
-    margin: 0;
-}
-
-.perf-accordion-summary::before {
-    content: "→ ";
-}
-
-details[open] .perf-accordion-summary::before {
-    content: "↓ ";
-}
-
 .perf-chart-wrap--tall {
     height: 400px;
 }
@@ -223,12 +354,80 @@ details[open] .perf-accordion-summary::before {
     height: 200px;
 }
 
+/* ── Info banner ──────────────────────────────────────────── */
+
+.perf-info-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    background: rgb(239 246 255);
+    border: 1px solid rgb(191 219 254);
+    border-radius: 6px;
+    color: rgb(30 64 175);
+    font-size: 13px;
+}
+
+.dark .perf-info-banner,
+[data-theme="dark"] .perf-info-banner {
+    background: rgb(30 58 138);
+    border-color: rgb(59 130 246);
+    color: rgb(191 219 254);
+}
+
+@media (prefers-color-scheme: dark) {
+    .perf-info-banner {
+        background: rgb(30 58 138);
+        border-color: rgb(59 130 246);
+        color: rgb(191 219 254);
+    }
+}
+
+.perf-info-icon {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    flex-shrink: 0;
+}
+
 /* ── Empty state ──────────────────────────────────────────── */
 
 .perf-empty-state {
     padding: 2rem;
     text-align: center;
     color: rgb(161 161 170);
+}
+
+/* ── Info banner ──────────────────────────────────────────── */
+
+.perf-info-banner {
+    background-color: rgb(219 234 254);
+    border-left: 4px solid rgb(59 130 246);
+    padding: 0.75rem 1rem;
+    margin: 1rem 0;
+    border-radius: 4px;
+    font-size: 14px;
+    color: rgb(30 58 138);
+}
+
+.perf-info-banner strong {
+    font-weight: 600;
+}
+
+@media (prefers-color-scheme: dark) {
+    .perf-info-banner {
+        background-color: rgb(30 58 138 / 0.2);
+        border-left-color: rgb(96 165 250);
+        color: rgb(191 219 254);
+    }
+}
+
+.dark .perf-info-banner,
+[data-theme="dark"] .perf-info-banner {
+    background-color: rgb(30 58 138 / 0.2);
+    border-left-color: rgb(96 165 250);
+    color: rgb(191 219 254);
 }
 
 /* ── Back link ────────────────────────────────────────────── */
@@ -283,6 +482,19 @@ details[open] .perf-accordion-summary::before {
     display: inline-flex;
     align-items: center;
     gap: 4px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.perf-status-summary__item:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.perf-status-summary__item--active {
+    background-color: rgba(0, 123, 255, 0.1);
+    outline: 2px solid rgba(0, 123, 255, 0.3);
 }
 
 .perf-status-summary__count {
@@ -294,11 +506,31 @@ details[open] .perf-accordion-summary::before {
     .perf-status-summary__count {
         color: rgb(161 161 170);
     }
+    
+    .perf-status-summary__item:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .perf-status-summary__item--active {
+        background-color: rgba(0, 123, 255, 0.2);
+        outline-color: rgba(0, 123, 255, 0.5);
+    }
 }
 
 .dark .perf-status-summary__count,
 [data-theme="dark"] .perf-status-summary__count {
     color: rgb(161 161 170);
+}
+
+.dark .perf-status-summary__item:hover,
+[data-theme="dark"] .perf-status-summary__item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .perf-status-summary__item--active,
+[data-theme="dark"] .perf-status-summary__item--active {
+    background-color: rgba(0, 123, 255, 0.2);
+    outline-color: rgba(0, 123, 255, 0.5);
 }
 
 /* ── Status code badges ───────────────────────────────────── */
@@ -390,3 +622,8 @@ details[open] .perf-accordion-summary::before {
         color: rgb(161 161 170);
     }
 }
+
+
+
+
+
