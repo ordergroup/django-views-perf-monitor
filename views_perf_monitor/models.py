@@ -1,8 +1,6 @@
-import json
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
 
 
 @dataclass
@@ -12,6 +10,8 @@ class TagStats:
     count: int
     p95: float = 0.0
     p99: float = 0.0
+    min_duration: float = 0.0
+    max_duration: float = 0.0
 
 
 @dataclass
@@ -50,8 +50,34 @@ class PerformanceRecord:
     method: str
     tags: list[str]
 
-    def model_dump_json(self) -> str:
-        data = {
+    @classmethod
+    def from_dict_list(cls, data: list[dict]) -> "list[PerformanceRecord]":
+        results = []
+        for item in data:
+            record = PerformanceRecord.from_dict(item)
+            if not record:
+                continue
+
+            results.append(record)
+
+        return results
+
+    @classmethod
+    def from_dict(cls, item: dict) -> "PerformanceRecord | None":
+        with suppress(KeyError, ValueError, TypeError):
+            return cls(
+                request_id=item["request_id"],
+                timestamp=datetime.fromisoformat(item["timestamp"]),
+                duration=item["duration"],
+                route=item["route"],
+                status_code=item["status_code"],
+                method=item["method"],
+                tags=item["tags"],
+            )
+
+    def model_dump(self) -> dict:
+        """Convert to dictionary."""
+        return {
             "request_id": self.request_id,
             "timestamp": self.timestamp.isoformat(),
             "duration": self.duration,
@@ -60,29 +86,3 @@ class PerformanceRecord:
             "method": self.method,
             "tags": self.tags,
         }
-        return json.dumps(data)
-
-    @classmethod
-    def model_validate_json(cls, raw: str | bytes) -> "PerformanceRecord":
-        data = json.loads(raw)
-        return cls(
-            request_id=data["request_id"],
-            timestamp=datetime.fromisoformat(data["timestamp"]),
-            duration=data["duration"],
-            route=data["route"],
-            status_code=data["status_code"],
-            method=data["method"],
-            tags=data["tags"],
-        )
-
-    @classmethod
-    def from_raw_records(cls, raw_records: list[Any]) -> "list[PerformanceRecord]":
-        results = []
-        for raw_record in raw_records:
-            if not raw_record:
-                continue
-
-            with suppress(Exception):
-                results.append(cls.model_validate_json(raw_record))
-
-        return results

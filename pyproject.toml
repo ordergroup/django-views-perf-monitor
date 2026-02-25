@@ -4,7 +4,7 @@ requires = [ "hatchling" ]
 
 [project]
 name = "django-views-perf-monitor"
-version = "0.1.0"
+version = "0.2.0"
 description = "Django views performance admin dashboard"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -43,6 +43,7 @@ extend-exclude = [
   "dist",
   "migrations",
   "venv",
+  "generate_test_data_streaming.py",
 ]
 format.indent-style = "space"
 format.quote-style = "double"

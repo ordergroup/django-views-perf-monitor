@@ -9,194 +9,20 @@
 
 {% block content %}
 
-<div class="module">
-  <form class="perf-filter-form" method="get" action="">
-    <input type="hidden" name="sort" value="{{ sort }}">
-    <label class="perf-date-label">From</label>
-    <input class="perf-filter-input" type="datetime-local" name="since" value="{{ since }}">
-    <label class="perf-date-label">To</label>
-    <input class="perf-filter-input" type="datetime-local" name="until" value="{{ until }}">
-    <button class="perf-filter-btn" type="submit">Filter</button>
-    {% if since or until %}
-    <a class="perf-filter-clear" href="?sort={{ sort }}">Clear</a>
-    {% endif %}
-  </form>
-</div>
-
-
-{% if all_tags %}
-<div class="module perf-chart-module">
-  <h2>Avg Response Time by Route &times; Tag (ms)</h2>
-  <div class="perf-chart-wrap perf-chart-wrap--tall">
-    <canvas id="chartRouteTag"></canvas>
-  </div>
-</div>
-
-<div class="module perf-chart-module">
-  <h2>Request Count by Route &times; Tag</h2>
-  <div class="perf-chart-wrap perf-chart-wrap--tall">
-    <canvas id="chartRouteTagCount"></canvas>
-  </div>
-</div>
-{% endif %}
-
-{% if tags_stats %}
-<div class="perf-charts-grid">
-  <div class="module perf-chart-module">
-    <h2>Avg Response Time by Tag (ms)</h2>
-    <div class="perf-chart-wrap">
-      <canvas id="chartAvgDuration"></canvas>
+<div class="module perf-recording-toggle">
+  <div class="perf-recording-toggle__header">
+    <div class="perf-recording-toggle__controls">
+      <label class="perf-toggle-switch">
+        <input type="checkbox" id="recordingToggle" {% if recording_enabled %}checked{% endif %}>
+        <span class="perf-toggle-slider"></span>
+      </label>
+      <button type="button" id="clearDataBtn" class="perf-clear-data-btn">Clear All Data</button>
     </div>
   </div>
-
-  <div class="module perf-chart-module">
-    <h2>Request Count by Tag</h2>
-    <div class="perf-chart-wrap">
-      <canvas id="chartRequestCount"></canvas>
-    </div>
-  </div>
-</div>
-{% endif %}
-
-<div class="module perf-chart-module">
-<details class="module perf-accordion">
-  <summary><h2 class="perf-accordion-summary">Response Time by Tag</h2></summary>
-  {% if tags_stats %}
-  <table class="perf-table">
-    <thead>
-      <tr>
-        <th>Tag</th>
-        <th>
-          <a href="?sort=avg" {% if sort == "avg" %}class="sort-active"{% endif %}>
-            Avg (ms) {% if sort == "avg" %}&darr;{% endif %}
-          </a>
-        </th>
-        <th>P95 (ms)</th>
-        <th>P99 (ms)</th>
-        <th>
-          <a href="?sort=count" {% if sort == "count" %}class="sort-active"{% endif %}>
-            Requests {% if sort == "count" %}&darr;{% endif %}
-          </a>
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for row in tags_stats %}
-      <tr>
-        <td>
-          <a href="{% url 'admin:views_perf_monitor_tag' %}?tag={{ row.tag|urlencode }}">
-            <code>{{ row.tag }}</code>
-          </a>
-        </td>
-        <td>{{ row.avg|floatformat:2 }}</td>
-        <td>{{ row.p95|floatformat:2 }}</td>
-        <td>{{ row.p99|floatformat:2 }}</td>
-        <td>{{ row.count }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-    <tfoot>
-      <tr>
-        <td><strong>Total</strong></td>
-        <td><strong>{{ tags_total_avg|floatformat:2 }}</strong></td>
-        <td></td>
-        <td></td>
-        <td><strong>{{ tags_total_count }}</strong></td>
-      </tr>
-    </tfoot>
-  </table>
-  {% else %}
-  <p class="perf-empty-state">No performance data recorded yet.</p>
-  {% endif %}
-</details>
-</div>
-
-{% if routes_stats %}
-<div class="perf-charts-grid">
-  <div class="module perf-chart-module">
-    <h2>Avg Response Time by Route (ms)</h2>
-    <div class="perf-chart-wrap">
-      <canvas id="chartRouteAvgDuration"></canvas>
-    </div>
-  </div>
-
-  <div class="module perf-chart-module">
-    <h2>Request Count by Route</h2>
-    <div class="perf-chart-wrap">
-      <canvas id="chartRouteRequestCount"></canvas>
-    </div>
-  </div>
-</div>
-{% endif %}
-
-<div class="module perf-chart-module">
-<details class="module perf-accordion" open>
-  <summary><h2 class="perf-accordion-summary">Response Time by Route</h2></summary>
-  {% if routes_stats %}
-  <table class="perf-table">
-    <thead>
-      <tr>
-        <th>Route</th>
-        <th>
-          <a href="?sort=avg" {% if sort == "avg" %}class="sort-active"{% endif %}>
-            Avg (ms) {% if sort == "avg" %}&darr;{% endif %}
-          </a>
-        </th>
-        <th>P95 (ms)</th>
-        <th>P99 (ms)</th>
-        <th>Min (ms)</th>
-        <th>Max (ms)</th>
-        <th>
-          <a href="?sort=count" {% if sort == "count" %}class="sort-active"{% endif %}>
-            Requests {% if sort == "count" %}&darr;{% endif %}
-          </a>
-        </th>
-        <th>Errors</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for row in routes_stats %}
-      <tr>
-        <td>
-          <a href="{% url 'admin:views_perf_monitor_route' %}?route={{ row.route|urlencode }}">
-            <code>{{ row.route }}</code>
-          </a>
-        </td>
-        <td>{{ row.avg|floatformat:2 }}</td>
-        <td>{{ row.p95|floatformat:2 }}</td>
-        <td>{{ row.p99|floatformat:2 }}</td>
-        <td>{{ row.min_duration|floatformat:2 }}</td>
-        <td>{{ row.max_duration|floatformat:2 }}</td>
-        <td>{{ row.count }}</td>
-        <td>
-          {% if row.error_count %}
-          <span class="perf-error-rate {% if row.error_rate >= 10 %}perf-error-rate--high{% elif row.error_rate >= 1 %}perf-error-rate--mid{% endif %}">
-            {{ row.error_count }} ({{ row.error_rate }}%)
-          </span>
-          {% else %}
-          <span class="perf-error-rate--none">&mdash;</span>
-          {% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-    <tfoot>
-      <tr>
-        <td><strong>Total</strong></td>
-        <td><strong>{{ routes_total_avg|floatformat:2 }}</strong></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td><strong>{{ routes_total_count }}</strong></td>
-        <td></td>
-      </tr>
-    </tfoot>
-  </table>
-  {% else %}
-  <p class="perf-empty-state">No route data recorded yet.</p>
-  {% endif %}
-</details>
+  <p class="perf-recording-toggle__description">
+    <span id="recordingStatus">Recording is currently <strong>{% if recording_enabled %}enabled{% else %}disabled{% endif %}</strong>.</span>
+    Toggle this switch to {% if recording_enabled %}stop{% else %}start{% endif %} collecting performance data.
+  </p>
 </div>
 
 {% if trend_chart_data %}
@@ -250,21 +76,27 @@
 </div>
 {% endif %}
 
-{% if trend_chart_data or status_stats or tags_stats or routes_stats %}
 <div id="perf-dashboard-data"
   {% if trend_chart_data %}data-trend-chart="{{ trend_chart_data }}"{% endif %}
   {% if status_stats %}data-status-chart="{{ status_chart_data }}"{% endif %}
-  {% if tags_stats %}data-tags-chart="{{ tags_chart_data }}"{% endif %}
-  {% if routes_stats %}data-routes-chart="{{ routes_chart_data }}"{% endif %}
-  {% if all_tags %}data-route-tag-chart="{{ route_tag_chart_data }}"{% endif %}
   data-tag-breakdown-url="{% url 'admin:views_perf_monitor_tag' %}"
   data-route-breakdown-url="{% url 'admin:views_perf_monitor_route' %}"
+  data-toggle-recording-url="{% url 'admin:views_perf_monitor_toggle_recording' %}"
+  data-clear-data-url="{% url 'admin:views_perf_monitor_clear_data' %}"
   hidden
 ></div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="{% static 'views_perf_monitor/common.js' %}"></script>
+<script src="{% static 'views_perf_monitor/controls.js' %}"></script>
+{% if trend_chart_data %}<script src="{% static 'views_perf_monitor/charts/trend.js' %}"></script>{% endif %}
+{% if status_stats %}<script src="{% static 'views_perf_monitor/charts/status.js' %}"></script>{% endif %}
 <script src="{% static 'views_perf_monitor/dashboard.js' %}"></script>
-{% endif %}
 {% endblock %}
+
+
+
+
+
 
 
 
