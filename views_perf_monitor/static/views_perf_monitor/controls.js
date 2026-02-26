@@ -60,14 +60,13 @@
       if (!confirmed) return;
 
       try {
-        const formData = new FormData();
-
+        const csrfToken = PerfMonitor.getCSRFToken();
+        
         const response = await fetch(clearDataUrl, {
           method: "POST",
-          headers: PerfMonitor.getCSRFToken()
-            ? { "X-CSRFToken": PerfMonitor.getCSRFToken() }
-            : {},
-          body: formData,
+          headers: {
+            "X-CSRFToken": csrfToken,
+          },
         });
 
         if (!response.ok) throw new Error("Failed to clear data");

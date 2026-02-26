@@ -150,6 +150,18 @@ const PerfMonitor = {
   },
 
   getCSRFToken() {
-    return document.querySelector("[name=csrfmiddlewaretoken]")?.value;
+    // First try to get from form input
+    const tokenInput = document.querySelector("[name=csrfmiddlewaretoken]");
+    if (tokenInput?.value) {
+      return tokenInput.value;
+    }
+    
+    // Fall back to cookie (Django's default for AJAX)
+    const cookieValue = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('csrftoken='))
+      ?.split('=')[1];
+    
+    return cookieValue;
   },
 };
