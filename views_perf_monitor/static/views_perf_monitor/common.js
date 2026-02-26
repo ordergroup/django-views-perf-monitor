@@ -88,7 +88,23 @@ const PerfMonitor = {
       onClick: (event, elements, chart) => {
         if (!elements.length) return;
         const label = chart.data.labels[elements[0].index];
-        window.location.href = `${baseUrl}?${paramName}=${encodeURIComponent(label)}`;
+        
+        // Preserve existing query parameters from current page
+        const currentParams = new URLSearchParams(window.location.search);
+        const params = new URLSearchParams();
+        
+        // Add the primary parameter (tag or route)
+        params.set(paramName, label);
+        
+        // Preserve date range filters if they exist
+        if (currentParams.has('since')) {
+          params.set('since', currentParams.get('since'));
+        }
+        if (currentParams.has('until')) {
+          params.set('until', currentParams.get('until'));
+        }
+        
+        window.location.href = `${baseUrl}?${params.toString()}`;
       },
       onHover: (event, elements) => {
         event.native.target.style.cursor = elements.length

@@ -32,7 +32,24 @@
       const { datasetIndex, index } = elements[0];
       const tag = filteredDatasets[datasetIndex].tag;
       const route = filteredRoutes[index];
-      window.location.href = `${tagBreakdownUrl}?tag=${encodeURIComponent(tag)}&route=${encodeURIComponent(route)}`;
+      
+      // Preserve existing query parameters from current page
+      const currentParams = new URLSearchParams(window.location.search);
+      const params = new URLSearchParams();
+      
+      // Add the primary parameters (tag and route)
+      params.set('tag', tag);
+      params.set('route', route);
+      
+      // Preserve date range filters if they exist
+      if (currentParams.has('since')) {
+        params.set('since', currentParams.get('since'));
+      }
+      if (currentParams.has('until')) {
+        params.set('until', currentParams.get('until'));
+      }
+      
+      window.location.href = `${tagBreakdownUrl}?${params.toString()}`;
     },
     onHover: (event, elements) => {
       event.native.target.style.cursor = elements.length
