@@ -22,10 +22,12 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-  "fakeredis>=2.34",
+  "fakeredis[lua]>=2.34",
   "pytest>=9.0.2",
   "redis>=7.1.1",
   "ruff>=0.15.1",
+  "tox>=4.46.3",
+  "tox-uv>=1.33.0",
 ]
 
 [tool.hatch]
