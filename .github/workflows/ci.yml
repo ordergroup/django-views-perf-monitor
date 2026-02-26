@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Python 3.10, 3.11, 3.12 with Django 3.2
+          # Python 3.10, 3.11, 3.12 with Django 3.2 LTS
           - python-version: "3.10"
             django-version: "3.2"
           - python-version: "3.11"
@@ -22,7 +22,7 @@ jobs:
           - python-version: "3.12"
             django-version: "3.2"
 
-          # Python 3.10, 3.11, 3.12, 3.13, 3.14 with Django 4.2, 5.0, 5.1, 5.2
+          # Python 3.10, 3.11, 3.12, 3.13, 3.14 with Django 4.2 LTS
           - python-version: "3.10"
             django-version: "4.2"
           - python-version: "3.11"
@@ -34,28 +34,7 @@ jobs:
           - python-version: "3.14"
             django-version: "4.2"
 
-          - python-version: "3.10"
-            django-version: "5.0"
-          - python-version: "3.11"
-            django-version: "5.0"
-          - python-version: "3.12"
-            django-version: "5.0"
-          - python-version: "3.13"
-            django-version: "5.0"
-          - python-version: "3.14"
-            django-version: "5.0"
-
-          - python-version: "3.10"
-            django-version: "5.1"
-          - python-version: "3.11"
-            django-version: "5.1"
-          - python-version: "3.12"
-            django-version: "5.1"
-          - python-version: "3.13"
-            django-version: "5.1"
-          - python-version: "3.14"
-            django-version: "5.1"
-
+          # Python 3.10, 3.11, 3.12, 3.13, 3.14 with Django 5.2 LTS
           - python-version: "3.10"
             django-version: "5.2"
           - python-version: "3.11"
@@ -67,7 +46,7 @@ jobs:
           - python-version: "3.14"
             django-version: "5.2"
 
-          # Python 3.12, 3.13, 3.14 with Django 6.0
+          # Python 3.12, 3.13, 3.14 with Django 6.0 LTS
           - python-version: "3.12"
             django-version: "6.0"
           - python-version: "3.13"
