@@ -2,17 +2,78 @@ name: CI
 
 on:
   push:
-    branches: [master , dev]
+    branches: [master, dev]
   pull_request:
+    branches: [master, dev]
 
 jobs:
   test:
-    name: Tests (Python ${{ matrix.python-version }})
+    name: Tests (Python ${{ matrix.python-version }}, Django ${{ matrix.django-version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        include:
+          # Python 3.10, 3.11, 3.12 with Django 3.2
+          - python-version: "3.10"
+            django-version: "3.2"
+          - python-version: "3.11"
+            django-version: "3.2"
+          - python-version: "3.12"
+            django-version: "3.2"
+
+          # Python 3.10, 3.11, 3.12, 3.13, 3.14 with Django 4.2, 5.0, 5.1, 5.2
+          - python-version: "3.10"
+            django-version: "4.2"
+          - python-version: "3.11"
+            django-version: "4.2"
+          - python-version: "3.12"
+            django-version: "4.2"
+          - python-version: "3.13"
+            django-version: "4.2"
+          - python-version: "3.14"
+            django-version: "4.2"
+
+          - python-version: "3.10"
+            django-version: "5.0"
+          - python-version: "3.11"
+            django-version: "5.0"
+          - python-version: "3.12"
+            django-version: "5.0"
+          - python-version: "3.13"
+            django-version: "5.0"
+          - python-version: "3.14"
+            django-version: "5.0"
+
+          - python-version: "3.10"
+            django-version: "5.1"
+          - python-version: "3.11"
+            django-version: "5.1"
+          - python-version: "3.12"
+            django-version: "5.1"
+          - python-version: "3.13"
+            django-version: "5.1"
+          - python-version: "3.14"
+            django-version: "5.1"
+
+          - python-version: "3.10"
+            django-version: "5.2"
+          - python-version: "3.11"
+            django-version: "5.2"
+          - python-version: "3.12"
+            django-version: "5.2"
+          - python-version: "3.13"
+            django-version: "5.2"
+          - python-version: "3.14"
+            django-version: "5.2"
+
+          # Python 3.12, 3.13, 3.14 with Django 6.0
+          - python-version: "3.12"
+            django-version: "6.0"
+          - python-version: "3.13"
+            django-version: "6.0"
+          - python-version: "3.14"
+            django-version: "6.0"
 
     steps:
       - uses: actions/checkout@v4
@@ -26,13 +87,17 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: uv sync --all-extras --dev
+        run: uv sync --all-extras
 
-      - name: Run tests
-        run: uv run pytest tests
+      - name: Install tox
+        run: uv pip install tox tox-uv
 
-      - name: Test package build
-        run: uv build
+      - name: Run tests with tox
+        run: |
+          PYTHON_VERSION=${{ matrix.python-version }}
+          DJANGO_VERSION=${{ matrix.django-version }}
+          TOX_ENV="py${PYTHON_VERSION/./}-django${DJANGO_VERSION/./}"
+          uv run tox -e $TOX_ENV
 
   lint:
     name: Code Quality
@@ -47,14 +112,37 @@ jobs:
           enable-cache: true
 
       - name: Set up Python
-        run: uv python install 3.12
+        run: uv python install 3.11
 
       - name: Install dependencies
-        run: uv sync --all-extras --dev
+        run: uv sync --all-extras
 
-      - name: Run ruff check
-        run: uv run ruff check .
+      - name: Install tox
+        run: uv pip install tox tox-uv
 
-      - name: Run ruff format check
-        run: uv run ruff format --check .
+      - name: Run lint with tox
+        run: uv run tox -e lint
 
+  build:
+    name: Test package build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Install tox
+        run: uv pip install tox tox-uv
+
+      - name: Run build with tox
+        run: uv run tox -e build
