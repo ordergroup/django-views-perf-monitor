@@ -354,6 +354,10 @@
     height: 200px;
 }
 
+.perf-chart-wrap--trend canvas {
+    cursor: pointer;
+}
+
 /* ── Info banner ──────────────────────────────────────────── */
 
 .perf-info-banner {
