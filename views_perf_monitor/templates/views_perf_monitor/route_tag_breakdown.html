@@ -28,13 +28,25 @@
     </form>
   </div>
   <div class="module perf-chart-module">
-    <h2>Avg Response Time by Route &times; Tag (ms)</h2>
+    <h2>Avg Response Time by Route &times; Tag - Heatmap (ms)</h2>
+    <div class="perf-chart-wrap perf-chart-wrap--tall">
+      <canvas id="chartRouteTagHeatmap"></canvas>
+    </div>
+  </div>
+  <div class="module perf-chart-module">
+    <h2>Avg Response Time by Route &times; Tag - Stacked (ms)</h2>
     <div class="perf-chart-wrap perf-chart-wrap--tall">
       <canvas id="chartRouteTag"></canvas>
     </div>
   </div>
   <div class="module perf-chart-module">
-    <h2>Request Count by Route &times; Tag</h2>
+    <h2>Request Count by Route &times; Tag - Heatmap</h2>
+    <div class="perf-chart-wrap perf-chart-wrap--tall">
+      <canvas id="chartRouteTagCountHeatmap"></canvas>
+    </div>
+  </div>
+  <div class="module perf-chart-module">
+    <h2>Request Count by Route &times; Tag - Stacked</h2>
     <div class="perf-chart-wrap perf-chart-wrap--tall">
       <canvas id="chartRouteTagCount"></canvas>
     </div>
@@ -45,6 +57,7 @@
        data-route-breakdown-url="{% url 'admin:views_perf_monitor_route' %}"
        hidden></div>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@2/dist/chartjs-chart-matrix.min.js"></script>
   <script src="{% static 'views_perf_monitor/common.js' %}"></script>
   <script src="{% static 'views_perf_monitor/charts/route-tag.js' %}"></script>
 

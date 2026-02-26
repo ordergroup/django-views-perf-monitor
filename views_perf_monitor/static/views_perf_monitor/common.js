@@ -96,6 +96,11 @@ const PerfMonitor = {
         // Add the primary parameter (tag or route)
         params.set(paramName, label);
         
+        // Preserve tag filter if it exists (for tag routes stats page)
+        if (currentParams.has('tag')) {
+          params.set('tag', currentParams.get('tag'));
+        }
+        
         // Preserve date range filters if they exist
         if (currentParams.has('since')) {
           params.set('since', currentParams.get('since'));
