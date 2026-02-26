@@ -1,114 +1,115 @@
 {% extends "admin/base_site.html" %}
+
 {% load static %}
 
 {% block title %}{{ title }}{% endblock %}
 
 {% block extrastyle %}
-<link rel="stylesheet" href="{% static 'views_perf_monitor/monitor.css' %}">
+  <link rel="stylesheet" href="{% static 'views_perf_monitor/monitor.css' %}">
+
 {% endblock %}
 
 {% block content %}
-
-<div class="module perf-recording-toggle">
-  <div class="perf-recording-toggle__header">
-    <div class="perf-recording-toggle__controls">
-      <label class="perf-toggle-switch">
-        <input type="checkbox" id="recordingToggle" {% if recording_enabled %}checked{% endif %}>
-        <span class="perf-toggle-slider"></span>
-      </label>
-      <button type="button" id="clearDataBtn" class="perf-clear-data-btn">Clear All Data</button>
+  <div class="module perf-recording-toggle">
+    <div class="perf-recording-toggle__header">
+      <div class="perf-recording-toggle__controls">
+        <label class="perf-toggle-switch">
+          <input type="checkbox"
+                 id="recordingToggle"
+                 {% if recording_enabled %}checked{% endif %}>
+          <span class="perf-toggle-slider"></span>
+        </label>
+        <button type="button" id="clearDataBtn" class="perf-clear-data-btn">Clear All Data</button>
+      </div>
     </div>
+    <p class="perf-recording-toggle__description">
+      <span id="recordingStatus">Recording is currently <strong>
+        {% if recording_enabled %}
+          enabled
+        {% else %}
+          disabled
+        {% endif %}
+      </strong>.</span>
+      Toggle this switch to
+      {% if recording_enabled %}
+        stop
+      {% else %}
+        start
+      {% endif %}
+      collecting performance data.
+    </p>
   </div>
-  <p class="perf-recording-toggle__description">
-    <span id="recordingStatus">Recording is currently <strong>{% if recording_enabled %}enabled{% else %}disabled{% endif %}</strong>.</span>
-    Toggle this switch to {% if recording_enabled %}stop{% else %}start{% endif %} collecting performance data.
-  </p>
-</div>
-
-{% if trend_chart_data %}
-<div class="module perf-chart-module">
-  <h2>Requests per Hour</h2>
-  <div class="perf-chart-wrap perf-chart-wrap--trend">
-    <canvas id="chartTrend"></canvas>
-  </div>
-</div>
-{% endif %}
-
-{% if status_stats %}
-<div class="perf-charts-grid">
-  <div class="module perf-chart-module">
-    <h2>Requests by Status Code</h2>
-    <div class="perf-chart-wrap">
-      <canvas id="chartStatusCode"></canvas>
+  {% if trend_chart_data %}
+    <div class="module perf-chart-module">
+      <h2>Requests per Hour</h2>
+      <div class="perf-chart-wrap perf-chart-wrap--trend">
+        <canvas id="chartTrend"></canvas>
+      </div>
     </div>
-  </div>
+  {% endif %}
+  {% if status_stats %}
+    <div class="perf-charts-grid">
+      <div class="module perf-chart-module">
+        <h2>Requests by Status Code</h2>
+        <div class="perf-chart-wrap">
+          <canvas id="chartStatusCode"></canvas>
+        </div>
+      </div>
+      <div class="module perf-chart-module">
+        <h2>Status Code Breakdown</h2>
+        <table class="perf-table">
+          <thead>
+            <tr>
+              <th>Status Code</th>
+              <th>Requests</th>
+              <th>% of Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in status_stats %}
+              <tr>
+                <td>
+                  <span class="status-badge status-badge--{{ row.status_code|stringformat:'d'|slice:':1' }}xx">{{ row.status_code }}</span>
+                </td>
+                <td>{{ row.count }}</td>
+                <td>{% widthratio row.count routes_total_count 100 %}%</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>
+                <strong>Total</strong>
+              </td>
+              <td>
+                <strong>{{ routes_total_count }}</strong>
+              </td>
+              <td>
+                <strong>100%</strong>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  {% endif %}
+  <div id="perf-dashboard-data"
+       {% if trend_chart_data %}data-trend-chart="{{ trend_chart_data }}"{% endif %}
+       {% if status_stats %}data-status-chart="{{ status_chart_data }}"{% endif %}
+       data-tag-breakdown-url="{% url 'admin:views_perf_monitor_tag' %}"
+       data-route-breakdown-url="{% url 'admin:views_perf_monitor_route' %}"
+       data-toggle-recording-url="{% url 'admin:views_perf_monitor_toggle_recording' %}"
+       data-clear-data-url="{% url 'admin:views_perf_monitor_clear_data' %}"
+       hidden></div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <script src="{% static 'views_perf_monitor/common.js' %}"></script>
+  <script src="{% static 'views_perf_monitor/controls.js' %}"></script>
+  {% if trend_chart_data %}
+    <script src="{% static 'views_perf_monitor/charts/trend.js' %}"></script>
+  {% endif %}
+  {% if status_stats %}
+    <script src="{% static 'views_perf_monitor/charts/status.js' %}"></script>
+  {% endif %}
+  <script src="{% static 'views_perf_monitor/dashboard.js' %}"></script>
 
-  <div class="module perf-chart-module">
-    <h2>Status Code Breakdown</h2>
-    <table class="perf-table">
-      <thead>
-        <tr>
-          <th>Status Code</th>
-          <th>Requests</th>
-          <th>% of Total</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for row in status_stats %}
-        <tr>
-          <td>
-            <span class="status-badge status-badge--{{ row.status_code|stringformat:'d'|slice:':1' }}xx">{{ row.status_code }}</span>
-          </td>
-          <td>{{ row.count }}</td>
-          <td>{% widthratio row.count routes_total_count 100 %}%</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-      <tfoot>
-        <tr>
-          <td><strong>Total</strong></td>
-          <td><strong>{{ routes_total_count }}</strong></td>
-          <td><strong>100%</strong></td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
-</div>
-{% endif %}
-
-<div id="perf-dashboard-data"
-  {% if trend_chart_data %}data-trend-chart="{{ trend_chart_data }}"{% endif %}
-  {% if status_stats %}data-status-chart="{{ status_chart_data }}"{% endif %}
-  data-tag-breakdown-url="{% url 'admin:views_perf_monitor_tag' %}"
-  data-route-breakdown-url="{% url 'admin:views_perf_monitor_route' %}"
-  data-toggle-recording-url="{% url 'admin:views_perf_monitor_toggle_recording' %}"
-  data-clear-data-url="{% url 'admin:views_perf_monitor_clear_data' %}"
-  hidden
-></div>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-<script src="{% static 'views_perf_monitor/common.js' %}"></script>
-<script src="{% static 'views_perf_monitor/controls.js' %}"></script>
-{% if trend_chart_data %}<script src="{% static 'views_perf_monitor/charts/trend.js' %}"></script>{% endif %}
-{% if status_stats %}<script src="{% static 'views_perf_monitor/charts/status.js' %}"></script>{% endif %}
-<script src="{% static 'views_perf_monitor/dashboard.js' %}"></script>
 {% endblock %}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
