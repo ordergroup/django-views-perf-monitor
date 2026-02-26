@@ -1,108 +1,163 @@
 {% extends "admin/base_site.html" %}
+
 {% load static %}
 
 {% block title %}{{ title }}{% endblock %}
 
 {% block extrastyle %}
-<link rel="stylesheet" href="{% static 'views_perf_monitor/monitor.css' %}">
+  <link rel="stylesheet" href="{% static 'views_perf_monitor/monitor.css' %}">
+
 {% endblock %}
 
 {% block content %}
-
-<a class="back-link" href="{% url 'admin:views_perf_monitor_dashboard' %}">&larr; Back to dashboard</a>
-
-<div class="module">
-  <h2>Requests for tag <code>{{ tag }}</code></h2>
-  <div class="perf-info-banner">
-    <strong>Note:</strong> Data is limited to the most recent {{ requests_limit|default:"100,000" }} requests matching your filters.
-  </div>
-  {% if status_stats %}
-  <div class="perf-status-summary">
-    {% for row in status_stats %}
-    <a href="?tag={{ tag|urlencode }}&status_code={{ row.status_code }}&route={{ route_filter|urlencode }}&since={{ since|urlencode }}&until={{ until|urlencode }}&sort={{ sort }}" 
-       class="perf-status-summary__item{% if status_code_filter == row.status_code|stringformat:'d' %} perf-status-summary__item--active{% endif %}" 
-       style="text-decoration: none;">
-      <span class="status-badge status-badge--{{ row.status_code|stringformat:'d'|slice:':1' }}xx">{{ row.status_code }}</span>
-      <span class="perf-status-summary__count">{{ row.count }}</span>
-    </a>
-    {% endfor %}
-  </div>
-  {% endif %}
-  <form class="perf-filter-form" method="get" action="">
-    <input type="hidden" name="tag" value="{{ tag }}">
-    <input type="hidden" name="sort" value="{{ sort }}">
-    <select class="perf-filter-input" name="route">
-      <option value="">All routes</option>
-      {% for r in available_routes %}
-      <option value="{{ r }}" {% if r == route_filter %}selected{% endif %}>{{ r }}</option>
-      {% endfor %}
-    </select>
-    <input class="perf-filter-input" type="text" name="status_code" placeholder="Status code" value="{{ status_code_filter }}" style="width: 100px;">
-    <label class="perf-date-label">From</label>
-    <input class="perf-filter-input" type="datetime-local" name="since" value="{{ since }}">
-    <label class="perf-date-label">To</label>
-    <input class="perf-filter-input" type="datetime-local" name="until" value="{{ until }}">
-    <button class="perf-filter-btn" type="submit">Filter</button>
-    {% if route_filter or status_code_filter or since or until %}
-    <a class="perf-filter-clear" href="?tag={{ tag|urlencode }}&sort={{ sort }}">Clear</a>
+  <a class="back-link"
+     href="{% url 'admin:views_perf_monitor_dashboard' %}">&larr; Back to dashboard</a>
+  <div class="module">
+    <h2>
+      Requests for tag <code>{{ tag }}</code>
+    </h2>
+    <div class="perf-info-banner">
+      <strong>Note:</strong> Data is limited to the most recent {{ requests_limit|default:"100,000" }} requests matching your filters.
+    </div>
+    {% if status_stats %}
+      <div class="perf-status-summary">
+        {% for row in status_stats %}
+          <a href="?tag={{ tag|urlencode }}&status_code={{ row.status_code }}&route={{ route_filter|urlencode }}&since={{ since|urlencode }}&until={{ until|urlencode }}&sort={{ sort }}"
+             class="perf-status-summary__item{% if status_code_filter == row.status_code|stringformat:'d' %} perf-status-summary__item--active{% endif %}"
+             style="text-decoration: none">
+            <span class="status-badge status-badge--{{ row.status_code|stringformat:'d'|slice:':1' }}xx">{{ row.status_code }}</span>
+            <span class="perf-status-summary__count">{{ row.count }}</span>
+          </a>
+        {% endfor %}
+      </div>
     {% endif %}
-  </form>
-  {% if page_obj %}
-  <table class="perf-table">
-    <thead>
-      <tr>
-        <th>
-          <a href="?tag={{ tag|urlencode }}&sort=timestamp&order={% if sort == 'timestamp' and order == 'desc' %}asc{% else %}desc{% endif %}" {% if sort == "timestamp" %}class="sort-active"{% endif %}>
-            Timestamp {% if sort == "timestamp" %}{% if order == "asc" %}&uarr;{% else %}&darr;{% endif %}{% endif %}
-          </a>
-        </th>
-        <th>
-          <a href="?tag={{ tag|urlencode }}&sort=route&order={% if sort == 'route' and order == 'desc' %}asc{% else %}desc{% endif %}" {% if sort == "route" %}class="sort-active"{% endif %}>
-            Route {% if sort == "route" %}{% if order == "asc" %}&uarr;{% else %}&darr;{% endif %}{% endif %}
-          </a>
-        </th>
-        <th>
-          <a href="?tag={{ tag|urlencode }}&sort=method&order={% if sort == 'method' and order == 'desc' %}asc{% else %}desc{% endif %}" {% if sort == "method" %}class="sort-active"{% endif %}>
-            Method {% if sort == "method" %}{% if order == "asc" %}&uarr;{% else %}&darr;{% endif %}{% endif %}
-          </a>
-        </th>
-        <th>
-          <a href="?tag={{ tag|urlencode }}&sort=status_code&order={% if sort == 'status_code' and order == 'desc' %}asc{% else %}desc{% endif %}" {% if sort == "status_code" %}class="sort-active"{% endif %}>
-            Status {% if sort == "status_code" %}{% if order == "asc" %}&uarr;{% else %}&darr;{% endif %}{% endif %}
-          </a>
-        </th>
-        <th>
-          <a href="?tag={{ tag|urlencode }}&sort=duration&order={% if sort == 'duration' and order == 'desc' %}asc{% else %}desc{% endif %}" {% if sort == "duration" %}class="sort-active"{% endif %}>
-            Duration (ms) {% if sort == "duration" %}{% if order == "asc" %}&uarr;{% else %}&darr;{% endif %}{% endif %}
-          </a>
-        </th>
-        <th>Request ID</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for record in page_obj %}
-      <tr>
-        <td>{{ record.timestamp|date:"Y-m-d H:i:s" }}</td>
-        <td><code>{{ record.route }}</code></td>
-        <td>{{ record.method }}</td>
-        <td>
-          <span class="status-badge status-badge--{{ record.status_code|stringformat:'d'|slice:':1' }}xx">{{ record.status_code }}</span>
-        </td>
-        <td>{{ record.duration|floatformat:2 }}</td>
-        <td><code>{{ record.request_id }}</code></td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% include "views_perf_monitor/pagination.html" %}
-  {% else %}
-  <p class="perf-empty-state">No requests recorded for this tag yet.</p>
-  {% endif %}
-</div>
+    <form class="perf-filter-form" method="get" action="">
+      <input type="hidden" name="tag" value="{{ tag }}">
+      <input type="hidden" name="sort" value="{{ sort }}">
+      <select class="perf-filter-input" name="route">
+        <option value="">All routes</option>
+        {% for r in available_routes %}
+          <option value="{{ r }}" {% if r == route_filter %}selected{% endif %}>{{ r }}</option>
+        {% endfor %}
+      </select>
+      <input class="perf-filter-input"
+             type="text"
+             name="status_code"
+             placeholder="Status code"
+             value="{{ status_code_filter }}"
+             style="width: 100px">
+      <label class="perf-date-label">From</label>
+      <input class="perf-filter-input"
+             type="datetime-local"
+             name="since"
+             value="{{ since }}">
+      <label class="perf-date-label">To</label>
+      <input class="perf-filter-input"
+             type="datetime-local"
+             name="until"
+             value="{{ until }}">
+      <button class="perf-filter-btn" type="submit">Filter</button>
+      {% if route_filter or status_code_filter or since or until %}
+        <a class="perf-filter-clear"
+           href="?tag={{ tag|urlencode }}&sort={{ sort }}">Clear</a>
+      {% endif %}
+    </form>
+    {% if page_obj %}
+      <table class="perf-table">
+        <thead>
+          <tr>
+            <th>
+              <a href="?tag={{ tag|urlencode }}&sort=timestamp&order={% if sort == 'timestamp' and order == 'desc' %}asc{% else %}desc{% endif %}"
+                 {% if sort == "timestamp" %}class="sort-active"{% endif %}>
+                Timestamp
+                {% if sort == "timestamp" %}
+                  {% if order == "asc" %}
+                    &uarr;
+                  {% else %}
+                    &darr;
+                  {% endif %}
+                {% endif %}
+              </a>
+            </th>
+            <th>
+              <a href="?tag={{ tag|urlencode }}&sort=route&order={% if sort == 'route' and order == 'desc' %}asc{% else %}desc{% endif %}"
+                 {% if sort == "route" %}class="sort-active"{% endif %}>
+                Route
+                {% if sort == "route" %}
+                  {% if order == "asc" %}
+                    &uarr;
+                  {% else %}
+                    &darr;
+                  {% endif %}
+                {% endif %}
+              </a>
+            </th>
+            <th>
+              <a href="?tag={{ tag|urlencode }}&sort=method&order={% if sort == 'method' and order == 'desc' %}asc{% else %}desc{% endif %}"
+                 {% if sort == "method" %}class="sort-active"{% endif %}>
+                Method
+                {% if sort == "method" %}
+                  {% if order == "asc" %}
+                    &uarr;
+                  {% else %}
+                    &darr;
+                  {% endif %}
+                {% endif %}
+              </a>
+            </th>
+            <th>
+              <a href="?tag={{ tag|urlencode }}&sort=status_code&order={% if sort == 'status_code' and order == 'desc' %}asc{% else %}desc{% endif %}"
+                 {% if sort == "status_code" %}class="sort-active"{% endif %}>
+                Status
+                {% if sort == "status_code" %}
+                  {% if order == "asc" %}
+                    &uarr;
+                  {% else %}
+                    &darr;
+                  {% endif %}
+                {% endif %}
+              </a>
+            </th>
+            <th>
+              <a href="?tag={{ tag|urlencode }}&sort=duration&order={% if sort == 'duration' and order == 'desc' %}asc{% else %}desc{% endif %}"
+                 {% if sort == "duration" %}class="sort-active"{% endif %}>
+                Duration (ms)
+                {% if sort == "duration" %}
+                  {% if order == "asc" %}
+                    &uarr;
+                  {% else %}
+                    &darr;
+                  {% endif %}
+                {% endif %}
+              </a>
+            </th>
+            <th>Request ID</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for record in page_obj %}
+            <tr>
+              <td>{{ record.timestamp|date:"Y-m-d H:i:s" }}</td>
+              <td>
+                <code>{{ record.route }}</code>
+              </td>
+              <td>{{ record.method }}</td>
+              <td>
+                <span class="status-badge status-badge--{{ record.status_code|stringformat:'d'|slice:':1' }}xx">{{ record.status_code }}</span>
+              </td>
+              <td>{{ record.duration|floatformat:2 }}</td>
+              <td>
+                <code>{{ record.request_id }}</code>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% include "views_perf_monitor/pagination.html" %}
+
+    {% else %}
+      <p class="perf-empty-state">No requests recorded for this tag yet.</p>
+    {% endif %}
+  </div>
+
 {% endblock %}
-
-
-
-
-
-

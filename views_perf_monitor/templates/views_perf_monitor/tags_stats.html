@@ -1,118 +1,122 @@
 {% extends "admin/base_site.html" %}
+
 {% load static %}
 
 {% block title %}{{ title }}{% endblock %}
 
 {% block extrastyle %}
-<link rel="stylesheet" href="{% static 'views_perf_monitor/monitor.css' %}">
+  <link rel="stylesheet" href="{% static 'views_perf_monitor/monitor.css' %}">
+
 {% endblock %}
 
 {% block content %}
+  <div class="module">
+    <form class="perf-filter-form" method="get" action="">
+      <input type="hidden" name="sort" value="{{ sort }}">
+      <label class="perf-date-label">From</label>
+      <input class="perf-filter-input"
+             type="datetime-local"
+             name="since"
+             value="{{ since }}">
+      <label class="perf-date-label">To</label>
+      <input class="perf-filter-input"
+             type="datetime-local"
+             name="until"
+             value="{{ until }}">
+      <button class="perf-filter-btn" type="submit">Filter</button>
+      {% if since or until %}<a class="perf-filter-clear" href="?sort={{ sort }}">Clear</a>{% endif %}
+    </form>
+  </div>
+  {% include "views_perf_monitor/_data_range_info.html" %}
 
-<div class="module">
-  <form class="perf-filter-form" method="get" action="">
-    <input type="hidden" name="sort" value="{{ sort }}">
-    <label class="perf-date-label">From</label>
-    <input class="perf-filter-input" type="datetime-local" name="since" value="{{ since }}">
-    <label class="perf-date-label">To</label>
-    <input class="perf-filter-input" type="datetime-local" name="until" value="{{ until }}">
-    <button class="perf-filter-btn" type="submit">Filter</button>
-    {% if since or until %}
-    <a class="perf-filter-clear" href="?sort={{ sort }}">Clear</a>
+  <div class="perf-charts-grid">
+    <div class="module perf-chart-module">
+      <h2>Avg Response Time by Tag (ms)</h2>
+      <div class="perf-chart-wrap">
+        <canvas id="chartAvgDuration"></canvas>
+      </div>
+    </div>
+    <div class="module perf-chart-module">
+      <h2>Request Count by Tag</h2>
+      <div class="perf-chart-wrap">
+        <canvas id="chartRequestCount"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="module perf-chart-module">
+    <h2>Response Time by Tag</h2>
+    {% include "views_perf_monitor/_aggregation_info.html" %}
+
+    {% if tags_stats %}
+      <table class="perf-table">
+        <thead>
+          <tr>
+            <th>Tag</th>
+            <th>
+              <a href="?sort=avg" {% if sort == "avg" %}class="sort-active"{% endif %}>
+                Avg (ms)
+                {% if sort == "avg" %}&darr;{% endif %}
+              </a>
+            </th>
+            <th>P95 (ms)</th>
+            <th>P99 (ms)</th>
+            <th>Min (ms)</th>
+            <th>Max (ms)</th>
+            <th>
+              <a href="?sort=count"
+                 {% if sort == "count" %}class="sort-active"{% endif %}>
+                Requests
+                {% if sort == "count" %}&darr;{% endif %}
+              </a>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in tags_stats %}
+            <tr>
+              <td>
+                <a href="{% url 'admin:views_perf_monitor_tag' %}?tag={{ row.tag|urlencode }}{% if since %}&since={{ since }}{% endif %}{% if until %}&until={{ until }}{% endif %}">
+                  <code>{{ row.tag }}</code>
+                </a>
+              </td>
+              <td>{{ row.avg|floatformat:2 }}</td>
+              <td>{{ row.p95|floatformat:2 }}</td>
+              <td>{{ row.p99|floatformat:2 }}</td>
+              <td>{{ row.min_duration|floatformat:2 }}</td>
+              <td>{{ row.max_duration|floatformat:2 }}</td>
+              <td>{{ row.count }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td>
+              <strong>Total</strong>
+            </td>
+            <td>
+              <strong>{{ tags_total_avg|floatformat:2 }}</strong>
+            </td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>
+              <strong>{{ tags_total_count }}</strong>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    {% else %}
+      <p class="perf-empty-state">No performance data recorded yet.</p>
     {% endif %}
-  </form>
-</div>
-
-{% include "views_perf_monitor/_data_range_info.html" %}
-
-<div class="perf-charts-grid">
-  <div class="module perf-chart-module">
-    <h2>Avg Response Time by Tag (ms)</h2>
-    <div class="perf-chart-wrap">
-      <canvas id="chartAvgDuration"></canvas>
-    </div>
   </div>
+  <div id="perf-dashboard-data"
+       data-tags-chart="{{ tags_chart_data }}"
+       data-tag-breakdown-url="{% url 'admin:views_perf_monitor_tag' %}"
+       data-route-breakdown-url="{% url 'admin:views_perf_monitor_route' %}"
+       hidden></div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <script src="{% static 'views_perf_monitor/common.js' %}"></script>
+  <script src="{% static 'views_perf_monitor/charts/tags.js' %}"></script>
 
-  <div class="module perf-chart-module">
-    <h2>Request Count by Tag</h2>
-    <div class="perf-chart-wrap">
-      <canvas id="chartRequestCount"></canvas>
-    </div>
-  </div>
-</div>
-
-<div class="module perf-chart-module">
-  <h2>Response Time by Tag</h2>
-  {% include "views_perf_monitor/_aggregation_info.html" %}
-  {% if tags_stats %}
-  <table class="perf-table">
-    <thead>
-      <tr>
-        <th>Tag</th>
-        <th>
-          <a href="?sort=avg" {% if sort == "avg" %}class="sort-active"{% endif %}>
-            Avg (ms) {% if sort == "avg" %}&darr;{% endif %}
-          </a>
-        </th>
-        <th>P95 (ms)</th>
-        <th>P99 (ms)</th>
-        <th>Min (ms)</th>
-        <th>Max (ms)</th>
-        <th>
-          <a href="?sort=count" {% if sort == "count" %}class="sort-active"{% endif %}>
-            Requests {% if sort == "count" %}&darr;{% endif %}
-          </a>
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for row in tags_stats %}
-      <tr>
-        <td>
-          <a href="{% url 'admin:views_perf_monitor_tag' %}?tag={{ row.tag|urlencode }}">
-            <code>{{ row.tag }}</code>
-          </a>
-        </td>
-        <td>{{ row.avg|floatformat:2 }}</td>
-        <td>{{ row.p95|floatformat:2 }}</td>
-        <td>{{ row.p99|floatformat:2 }}</td>
-        <td>{{ row.min_duration|floatformat:2 }}</td>
-        <td>{{ row.max_duration|floatformat:2 }}</td>
-        <td>{{ row.count }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-    <tfoot>
-      <tr>
-        <td><strong>Total</strong></td>
-        <td><strong>{{ tags_total_avg|floatformat:2 }}</strong></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td><strong>{{ tags_total_count }}</strong></td>
-      </tr>
-    </tfoot>
-  </table>
-  {% else %}
-  <p class="perf-empty-state">No performance data recorded yet.</p>
-  {% endif %}
-</div>
-
-
-<div id="perf-dashboard-data"
-  data-tags-chart="{{ tags_chart_data }}"
-  data-tag-breakdown-url="{% url 'admin:views_perf_monitor_tag' %}"
-  data-route-breakdown-url="{% url 'admin:views_perf_monitor_route' %}"
-  hidden
-></div>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-<script src="{% static 'views_perf_monitor/common.js' %}"></script>
-<script src="{% static 'views_perf_monitor/charts/tags.js' %}"></script>
 {% endblock %}
-
-
-
-
-
-

@@ -1,67 +1,51 @@
 {% extends "admin/base_site.html" %}
+
 {% load static %}
 
 {% block title %}{{ title }}{% endblock %}
 
 {% block extrastyle %}
-<link rel="stylesheet" href="{% static 'views_perf_monitor/monitor.css' %}">
+  <link rel="stylesheet" href="{% static 'views_perf_monitor/monitor.css' %}">
+
 {% endblock %}
 
 {% block content %}
-
-<div class="module">
-  <form class="perf-filter-form" method="get" action="">
-    <input type="hidden" name="sort" value="{{ sort }}">
-    <label class="perf-date-label">From</label>
-    <input class="perf-filter-input" type="datetime-local" name="since" value="{{ since }}">
-    <label class="perf-date-label">To</label>
-    <input class="perf-filter-input" type="datetime-local" name="until" value="{{ until }}">
-    <button class="perf-filter-btn" type="submit">Filter</button>
-    {% if since or until %}
-    <a class="perf-filter-clear" href="?sort={{ sort }}">Clear</a>
-    {% endif %}
-  </form>
-</div>
-
-
-<div class="module perf-chart-module">
-  <h2>Avg Response Time by Route &times; Tag (ms)</h2>
-  <div class="perf-chart-wrap perf-chart-wrap--tall">
-    <canvas id="chartRouteTag"></canvas>
+  <div class="module">
+    <form class="perf-filter-form" method="get" action="">
+      <input type="hidden" name="sort" value="{{ sort }}">
+      <label class="perf-date-label">From</label>
+      <input class="perf-filter-input"
+             type="datetime-local"
+             name="since"
+             value="{{ since }}">
+      <label class="perf-date-label">To</label>
+      <input class="perf-filter-input"
+             type="datetime-local"
+             name="until"
+             value="{{ until }}">
+      <button class="perf-filter-btn" type="submit">Filter</button>
+      {% if since or until %}<a class="perf-filter-clear" href="?sort={{ sort }}">Clear</a>{% endif %}
+    </form>
   </div>
-</div>
-
-<div class="module perf-chart-module">
-  <h2>Request Count by Route &times; Tag</h2>
-  <div class="perf-chart-wrap perf-chart-wrap--tall">
-    <canvas id="chartRouteTagCount"></canvas>
+  <div class="module perf-chart-module">
+    <h2>Avg Response Time by Route &times; Tag (ms)</h2>
+    <div class="perf-chart-wrap perf-chart-wrap--tall">
+      <canvas id="chartRouteTag"></canvas>
+    </div>
   </div>
-</div>
+  <div class="module perf-chart-module">
+    <h2>Request Count by Route &times; Tag</h2>
+    <div class="perf-chart-wrap perf-chart-wrap--tall">
+      <canvas id="chartRouteTagCount"></canvas>
+    </div>
+  </div>
+  <div id="perf-dashboard-data"
+       data-route-tag-chart="{{ route_tag_chart_data }}"
+       data-tag-breakdown-url="{% url 'admin:views_perf_monitor_tag' %}"
+       data-route-breakdown-url="{% url 'admin:views_perf_monitor_route' %}"
+       hidden></div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <script src="{% static 'views_perf_monitor/common.js' %}"></script>
+  <script src="{% static 'views_perf_monitor/charts/route-tag.js' %}"></script>
 
-
-<div id="perf-dashboard-data"
-  data-route-tag-chart="{{ route_tag_chart_data }}"
-  data-tag-breakdown-url="{% url 'admin:views_perf_monitor_tag' %}"
-  data-route-breakdown-url="{% url 'admin:views_perf_monitor_route' %}"
-  hidden
-></div>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-<script src="{% static 'views_perf_monitor/common.js' %}"></script>
-<script src="{% static 'views_perf_monitor/charts/route-tag.js' %}"></script>
 {% endblock %}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
