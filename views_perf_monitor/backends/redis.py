@@ -246,9 +246,13 @@ class RedisBackend(PerformanceMonitorBackend):
     def get_routes_stats(
         self, query: PerformanceRecordQueryBuilder
     ) -> list[RouteStats]:
-        if query.since or query.until:
+        if query.tag and not query.since and not query.until:
+            return self._get_aggregated_route_stats_for_tag(query.tag)
+
+        elif query.since or query.until or query.tag or query.route:
             records = self.fetch(query)
             return self._compute_route_stats_from_records(records)
+        # No filters, use fully aggregated stats
         else:
             return self._get_aggregated_route_stats()
 
@@ -373,6 +377,39 @@ class RedisBackend(PerformanceMonitorBackend):
                         error_rate=error_rate,
                         min_duration=min_duration,
                         max_duration=max_duration,
+                    )
+                )
+
+        return route_stats
+
+    def _get_aggregated_route_stats_for_tag(self, tag: str) -> list[RouteStats]:
+        """Get route statistics filtered by a specific tag using pre-aggregated data."""
+        all_routes = self.get_all_routes()
+        route_stats = []
+
+        with self.redis.pipeline() as pipe:
+            for route in all_routes:
+                pipe.hgetall(f"{STATS_ROUTE_TAG_PREFIX}{route}:{tag}")
+            results = pipe.execute()
+
+        for i, route in enumerate(all_routes):
+            stats_data = results[i]
+            if stats_data and stats_data.get("count"):
+                count = int(stats_data.get("count", 0))
+                total_duration = float(stats_data.get("total_duration", 0))
+                avg = total_duration / count if count > 0 else 0
+
+                route_stats.append(
+                    RouteStats(
+                        route=route,
+                        count=count,
+                        avg=avg,
+                        p95=0,
+                        p99=0,
+                        error_count=0,
+                        error_rate=0,
+                        min_duration=0,
+                        max_duration=0,
                     )
                 )
 

@@ -13,6 +13,17 @@
   <div class="module">
     <form class="perf-filter-form" method="get" action="">
       <input type="hidden" name="sort" value="{{ sort }}">
+      <label class="perf-date-label">Tag</label>
+      <select class="perf-filter-input"
+              name="tag"
+              id="tagSelector"
+              onchange="this.form.submit()">
+        <option value="">-- All Tags --</option>
+        {% for available_tag in available_tags %}
+          <option value="{{ available_tag }}"
+                  {% if available_tag == tag %}selected{% endif %}>{{ available_tag }}</option>
+        {% endfor %}
+      </select>
       <label class="perf-date-label">From</label>
       <input class="perf-filter-input"
              type="datetime-local"
@@ -24,7 +35,7 @@
              name="until"
              value="{{ until }}">
       <button class="perf-filter-btn" type="submit">Filter</button>
-      {% if since or until %}<a class="perf-filter-clear" href="?sort={{ sort }}">Clear</a>{% endif %}
+      {% if since or until or tag %}<a class="perf-filter-clear" href="?sort={{ sort }}">Clear</a>{% endif %}
     </form>
   </div>
   {% include "views_perf_monitor/_data_range_info.html" %}
@@ -53,7 +64,8 @@
           <tr>
             <th>Route</th>
             <th>
-              <a href="?sort=avg" {% if sort == "avg" %}class="sort-active"{% endif %}>
+              <a href="?sort=avg{% if tag %}&tag={{ tag|urlencode }}{% endif %}{% if since %}&since={{ since }}{% endif %}{% if until %}&until={{ until }}{% endif %}"
+                 {% if sort == "avg" %}class="sort-active"{% endif %}>
                 Avg (ms)
                 {% if sort == "avg" %}&darr;{% endif %}
               </a>
@@ -63,7 +75,7 @@
             <th>Min (ms)</th>
             <th>Max (ms)</th>
             <th>
-              <a href="?sort=count"
+              <a href="?sort=count{% if tag %}&tag={{ tag|urlencode }}{% endif %}{% if since %}&since={{ since }}{% endif %}{% if until %}&until={{ until }}{% endif %}"
                  {% if sort == "count" %}class="sort-active"{% endif %}>
                 Requests
                 {% if sort == "count" %}&darr;{% endif %}
@@ -76,7 +88,7 @@
           {% for row in routes_stats %}
             <tr>
               <td>
-                <a href="{% url 'admin:views_perf_monitor_route' %}?route={{ row.route|urlencode }}{% if since %}&since={{ since }}{% endif %}{% if until %}&until={{ until }}{% endif %}">
+                <a href="{% url 'admin:views_perf_monitor_route' %}?route={{ row.route|urlencode }}{% if tag %}&tag={{ tag|urlencode }}{% endif %}{% if since %}&since={{ since }}{% endif %}{% if until %}&until={{ until }}{% endif %}">
                   <code>{{ row.route }}</code>
                 </a>
               </td>

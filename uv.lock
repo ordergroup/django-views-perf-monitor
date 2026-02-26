@@ -116,7 +116,7 @@ wheels = [
 
 [[package]]
 name = "django-views-perf-monitor"
-version = "0.2.4"
+version = "0.2.5"
 source = { editable = "." }
 dependencies = [
     { name = "django", version = "5.2.11", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },

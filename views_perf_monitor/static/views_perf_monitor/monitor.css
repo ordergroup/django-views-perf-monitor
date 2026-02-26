@@ -259,6 +259,11 @@
 .perf-chart-wrap {
     position: relative;
     height: 280px;
+    overflow: hidden;
+}
+
+.perf-chart-wrap canvas {
+    max-width: 100%;
 }
 
 /* ── Filter form ──────────────────────────────────────────── */

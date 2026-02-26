@@ -47,6 +47,52 @@
       </div>
     </div>
   {% endif %}
+  {% if tags_stats %}
+    <div class="perf-charts-grid">
+      <div class="module perf-chart-module">
+        <h2>Requests by Tag</h2>
+        <div class="perf-chart-wrap">
+          <canvas id="chartTags"></canvas>
+        </div>
+      </div>
+      <div class="module perf-chart-module">
+        <h2>Tag Breakdown</h2>
+        <table class="perf-table">
+          <thead>
+            <tr>
+              <th>Tag</th>
+              <th>Requests</th>
+              <th>% of Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in tags_stats %}
+              <tr class="perf-table-clickable" data-tag="{{ row.tag }}">
+                <td>
+                  <strong>{{ row.tag }}</strong>
+                </td>
+                <td>{{ row.count }}</td>
+                <td>{% widthratio row.count tags_total_count 100 %}%</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>
+                <strong>Total</strong>
+              </td>
+              <td>
+                <strong>{{ tags_total_count }}</strong>
+              </td>
+              <td>
+                <strong>100%</strong>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  {% endif %}
   {% if status_stats %}
     <div class="perf-charts-grid">
       <div class="module perf-chart-module">
@@ -96,6 +142,8 @@
   <div id="perf-dashboard-data"
        {% if trend_chart_data %}data-trend-chart="{{ trend_chart_data }}"{% endif %}
        {% if status_stats %}data-status-chart="{{ status_chart_data }}"{% endif %}
+       {% if tags_stats %}data-tags-chart="{{ tags_chart_data }}"{% endif %}
+       data-routes-stats-url="{% url 'admin:views_perf_routes_stats' %}"
        data-tag-breakdown-url="{% url 'admin:views_perf_monitor_tag' %}"
        data-route-breakdown-url="{% url 'admin:views_perf_monitor_route' %}"
        data-toggle-recording-url="{% url 'admin:views_perf_monitor_toggle_recording' %}"
@@ -109,6 +157,9 @@
   {% endif %}
   {% if status_stats %}
     <script src="{% static 'views_perf_monitor/charts/status.js' %}"></script>
+  {% endif %}
+  {% if tags_stats %}
+    <script src="{% static 'views_perf_monitor/charts/dashboard-tags.js' %}"></script>
   {% endif %}
   <script src="{% static 'views_perf_monitor/dashboard.js' %}"></script>
 

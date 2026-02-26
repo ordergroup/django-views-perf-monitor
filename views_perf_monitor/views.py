@@ -66,9 +66,25 @@ def tags_stats_view(request: HttpRequest, site: AdminSite) -> TemplateResponse:
 def routes_stats_view(request: HttpRequest, site: AdminSite) -> TemplateResponse:
     filters = StatsFilters.from_request(request)
     backend = get_performance_monitor_backend()
-    query = PerformanceRecordQueryBuilder.all().for_date_range(
-        filters.since, filters.until
-    )
+
+    # Get tag filter from query params
+    tag = request.GET.get("tag", "")
+
+    # Get all available tags for the selector
+    available_tags = backend.get_all_tags()
+
+    # Build query with optional tag filter
+    if tag:
+        query = PerformanceRecordQueryBuilder.for_tag(tag).for_date_range(
+            filters.since, filters.until
+        )
+        title = f"Routes for Tag: {tag}"
+    else:
+        query = PerformanceRecordQueryBuilder.all().for_date_range(
+            filters.since, filters.until
+        )
+        title = "Routes Performance Statistics"
+
     routes_stats = backend.get_routes_stats(query)
 
     routes_stats = sorted(
@@ -86,7 +102,9 @@ def routes_stats_view(request: HttpRequest, site: AdminSite) -> TemplateResponse
 
     context = {
         **site.each_context(request),
-        "title": "Routes Performance Statistics",
+        "title": title,
+        "tag": tag,
+        "available_tags": available_tags,
         "routes_stats": routes_stats,
         "routes_chart_data": _build_routes_chart_data(routes_stats),
         "routes_total_count": routes_total_count,
@@ -132,9 +150,14 @@ def dashboard_view(request: HttpRequest, site: AdminSite) -> TemplateResponse:
 
     status_stats = backend.status_code_stats(query)
     trend_data = backend.request_trend(query)
+    tags_stats = backend.get_tags_stats(query)
+
+    # Sort tags by count (descending)
+    tags_stats = sorted(tags_stats, key=lambda t: t.count, reverse=True)
 
     # Calculate total count for percentage calculations
     routes_total_count = sum(stat.count for stat in status_stats)
+    tags_total_count = sum(stat.count for stat in tags_stats)
 
     # Check recording status
     recording_enabled = backend.is_recording_enabled()
@@ -148,6 +171,9 @@ def dashboard_view(request: HttpRequest, site: AdminSite) -> TemplateResponse:
         "status_chart_data": _build_status_chart_data(status_stats),
         "trend_chart_data": json.dumps(trend_data) if trend_data else "",
         "routes_total_count": routes_total_count,
+        "tags_stats": tags_stats,
+        "tags_chart_data": _build_tags_chart_data(tags_stats),
+        "tags_total_count": tags_total_count,
         "recording_enabled": recording_enabled,
     }
 

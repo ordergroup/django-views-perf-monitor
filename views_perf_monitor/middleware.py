@@ -73,16 +73,20 @@ def perf_middleware(get_response: Callable[[HttpRequest], HttpResponse]):
             logger.exception("failed to extract request id")
             request_id = str(uuid4())
 
-        record = PerformanceRecord(
-            timestamp=timestamp,
-            duration=duration,
-            route=route,
-            status_code=response.status_code,
-            method=request.method or "",
-            tags=request_tags,
-            request_id=request_id,
-        )
-        backend.save(record)
+        try:
+            record = PerformanceRecord(
+                timestamp=timestamp,
+                duration=duration,
+                route=route,
+                status_code=response.status_code,
+                method=request.method or "",
+                tags=request_tags,
+                request_id=request_id,
+            )
+            backend.save(record)
+        except Exception:
+            logger.exception("failed to save request to the perf backend")
+
         return response
 
     return middleware
