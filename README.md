@@ -47,7 +47,7 @@ VIEWS_PERF_MONITOR_BACKEND = {
     "backend": "views_perf_monitor.backends.redis.RedisBackend",
     "kwargs": {
         "redis_url": "redis://localhost:6379/0",
-        "ttl_days": 30,
+        "max_stream_length": 1_000_000,
     },
 }
 ```

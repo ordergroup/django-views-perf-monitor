@@ -268,6 +268,7 @@ def route_breakdown_view(request: HttpRequest, site: AdminSite) -> TemplateRespo
         PerformanceRecordQueryBuilder.for_route(filters.route)
         .filter_by_tag(filters.tag)
         .for_date_range(filters.since, filters.until)
+        .limit(REQUESTS_LIMIT)
         .order_by(filters.sort, filters.order)
     )
 

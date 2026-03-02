@@ -7,7 +7,6 @@ from redis import Redis
 
 from views_perf_monitor.backends import PerformanceRecordQueryBuilder
 from views_perf_monitor.backends.redis import (
-    CACHE_PREFIX,
     HOURLY_COUNTS_HASH,
     MAIN_STREAM,
     RECORDING_ENABLED_KEY,
@@ -37,9 +36,7 @@ def redis_backend(fake_redis):
     with patch.object(Redis, "from_url", return_value=fake_redis):
         backend = RedisBackend(
             redis_url="redis://localhost:6379/0",
-            ttl_days=30,
             max_stream_length=1000,
-            cache_ttl_seconds=300,
         )
         return backend
 
@@ -117,9 +114,7 @@ class TestRedisBackendInitialization:
 
     def test_initialization_with_defaults(self, redis_backend):
         """Test backend initializes with default values."""
-        assert redis_backend.ttl_days == 30
         assert redis_backend.max_stream_length == 1000
-        assert redis_backend.cache_ttl_seconds == 300
         assert redis_backend.redis is not None
 
     def test_initialization_with_custom_values(self, fake_redis):
@@ -127,13 +122,9 @@ class TestRedisBackendInitialization:
         with patch.object(Redis, "from_url", return_value=fake_redis):
             backend = RedisBackend(
                 redis_url="redis://localhost:6379/0",
-                ttl_days=7,
                 max_stream_length=500,
-                cache_ttl_seconds=60,
             )
-            assert backend.ttl_days == 7
             assert backend.max_stream_length == 500
-            assert backend.cache_ttl_seconds == 60
 
     def test_lua_script_registration(self, redis_backend):
         """Test that Lua script is registered."""
@@ -458,22 +449,6 @@ class TestFetch:
         records = redis_backend.fetch(query)
 
         assert len(records) == 0
-
-    def test_fetch_uses_cache(self, redis_backend, sample_records):
-        """Test that fetch uses cache for repeated queries."""
-        for record in sample_records:
-            redis_backend.save(record)
-
-        query = PerformanceRecordQueryBuilder.all()
-
-        # First fetch - should hit Redis
-        records1 = redis_backend.fetch(query)
-
-        # Second fetch - should hit cache
-        records2 = redis_backend.fetch(query)
-
-        assert len(records1) == len(records2)
-        assert records1[0].request_id == records2[0].request_id
 
 
 class TestGetAllTags:
@@ -893,75 +868,6 @@ class TestClearData:
 
         routes = redis_backend.get_all_routes()
         assert len(routes) == 0
-
-
-class TestCaching:
-    """Test caching functionality."""
-
-    def test_cache_key_generation(self, redis_backend):
-        """Test that cache keys are generated correctly."""
-        query1 = PerformanceRecordQueryBuilder.all()
-        query2 = PerformanceRecordQueryBuilder.for_route("/api/users")
-
-        key1 = redis_backend._get_cache_key("fetch", query1)
-        key2 = redis_backend._get_cache_key("fetch", query2)
-
-        assert key1 != key2
-        assert key1.startswith(CACHE_PREFIX)
-        assert key2.startswith(CACHE_PREFIX)
-
-    def test_cache_key_includes_all_params(self, redis_backend):
-        """Test that cache key includes all query parameters."""
-        since = datetime(2024, 1, 15, 10, 0, 0, tzinfo=timezone.utc)
-        until = datetime(2024, 1, 15, 11, 0, 0, tzinfo=timezone.utc)
-
-        query1 = PerformanceRecordQueryBuilder.all()
-        query2 = (
-            PerformanceRecordQueryBuilder.all()
-            .for_date_range(since, until)
-            .order_by("duration", "desc")
-            .limit(10)
-        )
-
-        key1 = redis_backend._get_cache_key("fetch", query1)
-        key2 = redis_backend._get_cache_key("fetch", query2)
-
-        assert key1 != key2
-
-    def test_cached_records_retrieval(self, redis_backend, sample_records):
-        """Test retrieving cached records."""
-        for record in sample_records:
-            redis_backend.save(record)
-
-        query = PerformanceRecordQueryBuilder.all()
-
-        # First fetch - caches the result
-        records1 = redis_backend.fetch(query)
-
-        # Manually check that cache was written
-        cache_key = redis_backend._get_cache_key("fetch", query)
-        cached_data = redis_backend.redis.get(cache_key)
-        assert cached_data is not None
-
-        # Second fetch - should use cache
-        records2 = redis_backend.fetch(query)
-
-        assert len(records1) == len(records2)
-
-    def test_cache_ttl(self, redis_backend, sample_records):
-        """Test that cache has TTL set."""
-        for record in sample_records:
-            redis_backend.save(record)
-
-        query = PerformanceRecordQueryBuilder.all()
-        redis_backend.fetch(query)
-
-        cache_key = redis_backend._get_cache_key("fetch", query)
-        ttl = redis_backend.redis.ttl(cache_key)
-
-        # TTL should be set and positive
-        assert ttl > 0
-        assert ttl <= redis_backend.cache_ttl_seconds
 
 
 class TestHelperMethods:
