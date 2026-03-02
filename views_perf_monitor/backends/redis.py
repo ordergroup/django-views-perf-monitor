@@ -24,8 +24,6 @@ logger = logging.getLogger(__name__)
 
 # Stream keys
 MAIN_STREAM = "perf:stream"  # Main stream of all performance records
-TAG_STREAM_PREFIX = "perf:tag_stream:"  # One stream per tag
-ROUTE_STREAM_PREFIX = "perf:route_stream:"  # One stream per route
 
 # Index keys (still using sets for quick lookups)
 TAG_INDEX_KEY = "perf:tags"
@@ -132,12 +130,6 @@ class RedisBackend(PerformanceMonitorBackend):
             if record.tags:
                 pipe.sadd(TAG_INDEX_KEY, *record.tags)
                 for tag in record.tags:
-                    pipe.xadd(
-                        f"{TAG_STREAM_PREFIX}{tag}",
-                        data,
-                        maxlen=self.max_stream_length,
-                        approximate=True,
-                    )
                     tag_stats_key = f"{STATS_TAG_PREFIX}{tag}"
                     pipe.hincrby(tag_stats_key, "count", 1)
                     pipe.hincrbyfloat(tag_stats_key, "total_duration", record.duration)
@@ -149,12 +141,6 @@ class RedisBackend(PerformanceMonitorBackend):
                     pipe.hincrbyfloat(route_tag_key, "total_duration", record.duration)
 
             pipe.sadd(ROUTE_INDEX_KEY, record.route)
-            pipe.xadd(
-                f"{ROUTE_STREAM_PREFIX}{record.route}",
-                data,
-                maxlen=self.max_stream_length,
-                approximate=True,
-            )
 
             pipe.execute()
 
@@ -170,27 +156,14 @@ class RedisBackend(PerformanceMonitorBackend):
 
     def get_data_time_range(self) -> tuple[datetime | None, datetime | None]:
         """Get the time range of available data from the main stream."""
-        # Get the first entry
-        first_entries = self.redis.xrange(MAIN_STREAM, count=1)
-        # Get the last entry
-        last_entries = self.redis.xrevrange(MAIN_STREAM, count=1)
-
         first_time = None
         last_time = None
 
-        if first_entries:
-            first_time = (
-                self._parse_stream_entries([first_entries[0]])[0].timestamp
-                if first_entries
-                else None
-            )
+        if first_entries := self.redis.xrange(MAIN_STREAM, count=1):
+            first_time = self._parse_stream_entries(first_entries)[0].timestamp
 
-        if last_entries:
-            last_time = (
-                self._parse_stream_entries([last_entries[0]])[0].timestamp
-                if last_entries
-                else None
-            )
+        if last_entries := self.redis.xrevrange(MAIN_STREAM, count=1):
+            last_time = self._parse_stream_entries(last_entries)[0].timestamp
 
         return first_time, last_time
 
@@ -200,23 +173,22 @@ class RedisBackend(PerformanceMonitorBackend):
         if cached_records is not None:
             return cached_records
 
-        if query.tag:
-            stream_key = f"{TAG_STREAM_PREFIX}{query.tag}"
-        elif query.route:
-            stream_key = f"{ROUTE_STREAM_PREFIX}{query.route}"
-        else:
-            stream_key = MAIN_STREAM
-
         min_id = self._datetime_to_stream_id(query.since) if query.since else "-"
         max_id = self._datetime_to_stream_id(query.until) if query.until else "+"
 
         stream_entries = self.redis.xrevrange(
-            stream_key,
+            MAIN_STREAM,
             max_id,
             min_id,
             count=query.limit_records,
         )
         records = self._parse_stream_entries(stream_entries)
+
+        if query.tag:
+            records = [r for r in records if query.tag in r.tags]
+
+        if query.route:
+            records = [r for r in records if query.route == r.route]
 
         if route_filter := getattr(query, "route_filter", None):
             records = [r for r in records if r.route == route_filter]
