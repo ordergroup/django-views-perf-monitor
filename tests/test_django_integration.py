@@ -73,7 +73,6 @@ TEST_SETTINGS = {
         "backend": "views_perf_monitor.backends.redis.RedisBackend",
         "kwargs": {
             "redis_url": "redis://localhost:6379/0",
-            "ttl_days": 30,
         },
     },
     "DATABASES": {
@@ -97,9 +96,7 @@ def redis_backend(fake_redis):
     with patch.object(Redis, "from_url", return_value=fake_redis):
         backend = RedisBackend(
             redis_url="redis://localhost:6379/0",
-            ttl_days=30,
             max_stream_length=1000,
-            cache_ttl_seconds=300,
         )
         yield backend
 
@@ -356,9 +353,6 @@ class TestDjangoMiddlewareIntegration:
         request = request_factory.get("/test/simple/")
         middleware(request)
 
-        # Clear the cache before fetching to ensure fresh results
-        redis_backend.redis.delete(redis_backend._get_cache_key("fetch", query))
-
         # Should still only have 1 record
         records = redis_backend.fetch(query)
         assert len(records) == 1
@@ -369,9 +363,6 @@ class TestDjangoMiddlewareIntegration:
         # Make another request - should be recorded
         request = request_factory.get("/test/simple/")
         middleware(request)
-
-        # Clear the cache again
-        redis_backend.redis.delete(redis_backend._get_cache_key("fetch", query))
 
         # Should now have 2 records
         records = redis_backend.fetch(query)

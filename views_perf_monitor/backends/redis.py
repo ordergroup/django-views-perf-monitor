@@ -1,4 +1,3 @@
-import hashlib
 import json
 import logging
 import math
@@ -37,15 +36,10 @@ STATS_GLOBAL = "perf:stats:global"  # Global statistics
 HOURLY_COUNTS_HASH = "perf:hourly_counts"  # Hash: hour_bucket -> count
 STATUS_CODE_COUNTS_HASH = "perf:status_code_counts"  # Hash: status_code -> count
 
-# Cache keys
-CACHE_PREFIX = "perf:cache:"  # Query result cache
-
 # Control keys
 RECORDING_ENABLED_KEY = "perf:recording_enabled"  # Flag to enable/disable recording
 
-DEFAULT_TTL_DAYS = 30
 DEFAULT_MAX_STREAM_LENGTH = 1_000_000  # Keep last 1M entries
-DEFAULT_CACHE_TTL_SECONDS = 300  # 5 minutes
 
 
 class RedisBackend(PerformanceMonitorBackend):
@@ -59,14 +53,10 @@ class RedisBackend(PerformanceMonitorBackend):
     def __init__(
         self,
         redis_url: str,
-        ttl_days: int = DEFAULT_TTL_DAYS,
         max_stream_length: int = DEFAULT_MAX_STREAM_LENGTH,
-        cache_ttl_seconds: int = DEFAULT_CACHE_TTL_SECONDS,
     ):
         self.redis = Redis.from_url(redis_url, decode_responses=True)
-        self.ttl_days = ttl_days
         self.max_stream_length = max_stream_length
-        self.cache_ttl_seconds = cache_ttl_seconds
 
         # Lua script for atomic min/max updates
         self.update_min_max_script = self.redis.register_script("""
@@ -168,11 +158,6 @@ class RedisBackend(PerformanceMonitorBackend):
         return first_time, last_time
 
     def fetch(self, query: PerformanceRecordQueryBuilder) -> list[PerformanceRecord]:
-        cache_key = self._get_cache_key("fetch", query)
-        cached_records = self._get_cached_records(cache_key)
-        if cached_records is not None:
-            return cached_records
-
         min_id = self._datetime_to_stream_id(query.since) if query.since else "-"
         max_id = self._datetime_to_stream_id(query.until) if query.until else "+"
 
@@ -205,7 +190,6 @@ class RedisBackend(PerformanceMonitorBackend):
                 records, key=lambda r: getattr(r, order_by), reverse=reverse
             )
 
-        self._cache_result(cache_key, [r.model_dump() for r in records])
         return records
 
     def get_tags_stats(self, query: PerformanceRecordQueryBuilder) -> list[TagStats]:
@@ -530,46 +514,6 @@ class RedisBackend(PerformanceMonitorBackend):
             }
             for route, tags in stats.items()
         }
-
-    def _get_cache_key(
-        self, operation: str, query: PerformanceRecordQueryBuilder
-    ) -> str:
-        """Generate a cache key based on the query parameters."""
-        key_parts = [
-            operation,
-            query.tag or "",
-            query.route or "",
-            query.since.isoformat() if query.since else "",
-            query.until.isoformat() if query.until else "",
-            query.order_by_field or "",
-            query.order_direction or "",
-            str(query.limit_records or ""),
-            getattr(query, "route_filter", "") or "",
-            getattr(query, "tag_filter", "") or "",
-            str(getattr(query, "status_code_filter", "") or ""),
-        ]
-        key_string = "|".join(key_parts)
-        key_hash = hashlib.md5(key_string.encode()).hexdigest()
-        return f"{CACHE_PREFIX}{operation}:{key_hash}"
-
-    def _get_cached_records(self, cache_key: str) -> list[PerformanceRecord] | None:
-        """Retrieve cached records from Redis."""
-        cached = self.redis.get(cache_key)
-        if not cached:
-            return None
-
-        try:
-            data = json.loads(cached)
-            return PerformanceRecord.from_dict_list(data)
-        except json.JSONDecodeError as e:
-            logger.warning(f"Failed to deserialize cached records: {e}")
-            return None
-
-    def _cache_result(self, cache_key: str, data: list | dict) -> None:
-        try:
-            self.redis.setex(cache_key, self.cache_ttl_seconds, json.dumps(data))
-        except Exception as e:
-            logger.warning(f"Failed to cache result: {e}")
 
     def _datetime_to_stream_id(self, dt: datetime) -> str:
         if dt.tzinfo is None:
